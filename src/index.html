@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="style.bundle.js"></script>
+    <title>Document</title>
+  </head>
+  <body>
+    <main class="flex-grow-1" role="main">
+      <section class="container-fluid bg-dark p-5 shadow-lg rounded">        
+        <div class="col-md-10 col-lg-8 mx-auto text-white">
+          <div class="d-flex flex-row-reverse p-6">
+            <div class="btn-group btn-group-toggle" data-toggle="langs">
+              <label class="btn btn-secondary active">
+                <input type="radio" name="options" id="lang-en" checked>EN
+              </label>
+              <label class="btn btn-secondary">
+                <input type="radio" name="options" id="lang-ru">RU
+              </label>
+            </div>
+          </div>
+          <h1 class="display-4">RSS Reader</h1>
+          <p class="lead">Start reading RSS today! It is easy, it is nicely.</p>
+          <hr class="my-4 bg-secondary"></th>
+          <form class="rss-form mb-3">
+            <div class="form-row">
+              <div class="col">
+                <input type="text" class="form-control" placeholder="RSS link" autofocus required >
+              </div>
+              <div class="col-auto">
+                <input type="submit" class="btn btn-secondary px-4" value="Add">
+              </div>
+            </div>
+          </form>
+          <p class="text-muted">Example: https://ru.hexlet.io/lessons.rss</p>
+        </div>
+      </section>
+
+      <section class="container-fluid col-md-10 col-lg-8 mx-auto p-5">
+        <div class="d-flex flex-column justify-content-center align-items-center">
+          <img src="assets/images/feeds.png">        
+          <p class="h3 mb-2">Which sources would you like to follow?</p>
+          <p class="text-muted mb-3">You can follow publications, blogs, keyword alerts, and twitter feeds</p>
+          <a class="btn btn-success" href="#rss-link">ADD CONTENT</a>
+        </div>
+      </section>
+    </main>
+    <script src="main.bundle.js"></script>
+  </body>
+</html>
