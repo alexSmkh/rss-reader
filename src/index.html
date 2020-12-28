@@ -3,15 +3,17 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="style.css">
     <script src="style.bundle.js"></script>
     <title>Document</title>
   </head>
   <body>
     <main class="flex-grow-1" role="main">
-      <section class="container-fluid bg-dark p-5 shadow-lg rounded">        
+      <section class="container-fluid bg-dark p-3 shadow-lg">        
         <div class="col-md-10 col-lg-8 mx-auto text-white">
-          <div class="d-flex flex-row-reverse p-6">
-            <div class="btn-group btn-group-toggle" data-toggle="langs">
+          <div class="header-top d-flex justify-content-between align-items-center">
+          <h1 class="display-4">RSS Reader</h1>
+          <div class="btn-group btn-group-toggle" data-toggle="langs">
               <label class="btn btn-secondary active">
                 <input type="radio" name="options" id="lang-en" checked>EN
               </label>
@@ -20,13 +22,13 @@
               </label>
             </div>
           </div>
-          <h1 class="display-4">RSS Reader</h1>
-          <p class="lead">Start reading RSS today! It is easy, it is nicely.</p>
+          
+          <p class="lead">Start reading RSS today!</p>
           <hr class="my-4 bg-secondary"></th>
           <form class="rss-form mb-3">
             <div class="form-row">
               <div class="col">
-                <input type="text" class="form-control" placeholder="RSS link" autofocus required >
+                <input type="text" class="form-control focus-effect" placeholder="RSS Link" required >
               </div>
               <div class="col-auto">
                 <input type="submit" class="btn btn-secondary px-4" value="Add">
@@ -37,15 +39,19 @@
         </div>
       </section>
 
-      <section class="container-fluid col-md-10 col-lg-8 mx-auto p-5">
-        <div class="d-flex flex-column justify-content-center align-items-center">
+      <section class="content container-fluid col-md-10 col-lg-8">
+      <div class="d-flex flex-column justify-content-center align-items-center mt-5">
           <img src="assets/images/feeds.png">        
           <p class="h3 mb-2">Which sources would you like to follow?</p>
-          <p class="text-muted mb-3">You can follow publications, blogs, keyword alerts, and twitter feeds</p>
-          <a class="btn btn-success" href="#rss-link">ADD CONTENT</a>
+          <p class="text-muted">You can follow publications, blogs and more!</p>
         </div>
       </section>
     </main>
+
+    <footer class="fixed-bottom bg-dark d-flex justify-content-center align-items-center">
+    <p class="text-white font-weight-bold mb-0">RSS Reader</p>
+    </footer>
+
     <script src="main.bundle.js"></script>
   </body>
 </html>
