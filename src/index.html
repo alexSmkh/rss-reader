@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="stylesheet" href="style.css">
+    <!-- <link rel="stylesheet" href="style.css"> -->
     <script src="style.bundle.js"></script>
     <title>Document</title>
   </head>
@@ -25,13 +25,13 @@
           
           <p class="lead">Start reading RSS today!</p>
           <hr class="my-4 bg-secondary"></th>
-          <form class="rss-form mb-3">
+          <form id="rss-link-form" class="rss-form mb-3">
             <div class="form-row">
               <div class="col">
-                <input type="text" class="form-control focus-effect" placeholder="RSS Link" required >
+                <input id="rss-link-input" type="text" class="form-control focus-effect" placeholder="RSS Link" name="rss-link" required >
               </div>
               <div class="col-auto">
-                <input type="submit" class="btn btn-secondary px-4" value="Add">
+                <input id="add-content-btn" type="submit" class="btn btn-secondary px-4" value="Add" disabled>
               </div>
             </div>
           </form>
