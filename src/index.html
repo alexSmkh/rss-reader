@@ -9,7 +9,7 @@
   </head>
   <body>
     <main class="flex-grow-1" role="main">
-      <section class="container-fluid bg-dark p-3 shadow-lg">        
+      <section class="container-fluid bg-dark p-3 shadow">        
         <div class="col-md-10 col-lg-8 mx-auto text-white">
           <div class="header-top d-flex justify-content-between align-items-center">
           <h1 class="display-4">RSS Reader</h1>
@@ -31,7 +31,7 @@
                 <input id="rss-link-input" type="text" class="form-control focus-effect" placeholder="RSS Link" name="rss-link" required >
               </div>
               <div class="col-auto">
-                <input id="add-content-btn" type="submit" class="btn btn-secondary px-4" value="Add" disabled>
+                <input id="add-content-btn" type="submit" class="btn btn-secondary px-4" value="Add">
               </div>
             </div>
           </form>
@@ -39,19 +39,20 @@
         </div>
       </section>
 
-      <section class="content container-fluid col-md-10 col-lg-8">
-      <div class="d-flex flex-column justify-content-center align-items-center mt-5">
-          <img src="assets/images/feeds.png">        
-          <p class="h3 mb-2">Which sources would you like to follow?</p>
-          <p class="text-muted">You can follow publications, blogs and more!</p>
+      <section class="container-fluid col-md-10 col-lg-8 mt-4 mb-5">
+        <div class="row" name="rss-content">
+          <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-5">
+            <img src="assets/images/feeds.png">        
+            <p class="h3 mb-2">Which sources would you like to follow?</p>
+          </div>
         </div>
       </section>
     </main>
 
-    <footer class="fixed-bottom bg-dark d-flex justify-content-center align-items-center">
-    <p class="text-white font-weight-bold mb-0">RSS Reader</p>
+    <footer class="fixed-bottom bg-dark d-flex justify-content-center align-items-center mt-4 py-3">
+        <div class="text-light">
+          created by <a href="https://github.com/alexSmkh" target="_blank"><img src="/assets/images/github.svg" style="height: 25px"></a>
+        </div>
     </footer>
-
-    <script src="main.bundle.js"></script>
   </body>
 </html>

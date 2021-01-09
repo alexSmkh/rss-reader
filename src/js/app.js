@@ -1,7 +1,43 @@
 import * as yup from 'yup';
 import axios from 'axios';
+import _ from 'lodash';
 import initView from './view';
 
+const getRssSourceData= (parsedRss) => {
+  const title = parsedRss.querySelector('title').textContent;
+  const description = parsedRss.querySelector('description').textContent;
+  const link = parsedRss.querySelector('link').textContent;
+  const id = _.uniqueId();
+  return { title, description, link, id };
+};
+
+const getRssPostsData = (parsedRss, sourceId) => {
+  const items = parsedRss.querySelectorAll('item');
+  const posts = [];
+  items.forEach((item) => {
+    const title = item.querySelector('title').textContent;
+    const description = item.querySelector('description').textContent;
+    const link = item.querySelector('link').textContent;
+    const pubDate = item.querySelector('pubDate').textContent;
+    const date = new Date(pubDate);
+    const id = _.uniqueId();    
+    posts.push({
+      title,
+      description,
+      link,
+      pubDate: date,
+      sourceId,
+      id,
+      unread: true,
+    });
+  });
+  return posts;
+};
+
+const parseStringToHtml = (rawStr, mimeType) => {
+  const parser = new DOMParser();
+  return parser.parseFromString(rawStr, mimeType);
+};
 
 const validateRssLink = (formFields) => {
   const schema = yup.object().shape({
@@ -31,8 +67,8 @@ export default async () => {
       error: null,
     },
     rssSources: [],
+    activeSourceId: null,
     posts: [],
-    contentSectionState: 'startPage', // rssList 
   };
 
   const submit = document.getElementById('add-content-btn');
@@ -58,14 +94,32 @@ export default async () => {
 
   form.addEventListener('submit', (e) => {
     e.preventDefault();
+    watchedState.form.processState = 'sending';
+    
     const data = new FormData(e.target);
     const rssLink = data.get('rss-link');
-    watchedState.form.processState = 'sending';
-
+    const proxy = 'https://api.allorigins.win/get?url=';
+    
     axios
-      .get(rssLink)
+      .get(`${proxy}${rssLink}`)
       .then((response) => {
-        console.log(response);
+        watchedState.form.fields.input = '';
+        watchedState.form.processState = 'filling';
+        
+        const parsedRss = parseStringToHtml(response.data.contents, 'text/xml');
+        const newSource = getRssSourceData(parsedRss, watchedState.activeSourceId);
+        if (!watchedState.activeSourceId) {
+          watchedState.activeSourceId = newSource.id;
+        }
+        const postsOfNewSource = getRssPostsData(parsedRss, newSource.id);
+        return { newSource, postsOfNewSource};
       })
+      .then(({ newSource, postsOfNewSource }) => {
+        watchedState.posts = [...watchedState.posts, ...postsOfNewSource];
+        watchedState.rssSources = [...watchedState.rssSources, newSource];
+        watchedState.contentSectionState = 'rss-list';
+        return { newSource, updatedPosts };
+      })
+      .catch((err) => console.log());
   })
 };
