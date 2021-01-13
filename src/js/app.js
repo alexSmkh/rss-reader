@@ -6,6 +6,13 @@ import i18n from 'i18next';
 import initView from './view';
 import resources from './locales/index';
 
+const removeTrailingSlash = (url) => {
+  if (url.endsWith('/')) {
+    return url.slice(0, -1);
+  }
+  return url;
+}
+
 const getRssSourceData = (parsedRss) => {
   const title = parsedRss.querySelector('title').textContent;
   const description = parsedRss.querySelector('description').textContent;
@@ -47,9 +54,9 @@ const validateRssLink = (watchedState) => {
     string: {
       url: i18n.t('errors.formValidation.url'),
     },
-    mixed : {
+    mixed: {
       required: i18n.t('errors.formValidation.required'),
-    }
+    },
   });
 
   const schema = yup.object().shape({
@@ -57,17 +64,20 @@ const validateRssLink = (watchedState) => {
       .string()
       .url()
       .required()
-      .matches(/.(rss|xml)$/, i18n.t('errors.formValidation.itsNotRss'))
-      // .test('Existing link', i18n.t('linkAlreadyExists'), (enteredLink) => {
-      //   return watchedState.rssLinks.includes(enteredLink);
-      // })
+      .matches(/.(rss|xml)($|\/$)/, i18n.t('errors.formValidation.itsNotRss'))
+      .test(
+        'Existing link',
+        i18n.t('errors.formValidation.rssAlreadyExists'),
+        (enteredLink) =>  !watchedState.rssLinks.includes(
+            removeTrailingSlash(enteredLink)
+          )
+      ),
   });
-  console.log('validation', watchedState.form.fields)
+
   try {
     schema.validateSync(watchedState.form.fields, { abortEarly: false });
     return null;
   } catch (e) {
-    // console.log(e);
     return e.errors[0];
   }
 };
@@ -86,6 +96,7 @@ export default async () => {
       },
       error: null,
     },
+    rssLinks: [],
     rssSources: [],
     activeSourceId: null,
     posts: [],
@@ -112,7 +123,7 @@ export default async () => {
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
     const error = validateRssLink(watchedState);
-    watchedState.form.valid = !!error;
+    watchedState.form.valid = !!!error;
     watchedState.form.error = error;
   });
 
@@ -121,7 +132,7 @@ export default async () => {
     watchedState.form.processState = 'sending';
 
     const data = new FormData(e.target);
-    const rssLink = data.get('rss-link');
+    const rssLink = removeTrailingSlash(data.get('rss-link'));
     const proxy = 'https://api.allorigins.win/get?url=';
 
     axios
@@ -144,6 +155,7 @@ export default async () => {
       .then(({ newSource, postsOfNewSource }) => {
         watchedState.posts = [...watchedState.posts, ...postsOfNewSource];
         watchedState.rssSources = [...watchedState.rssSources, newSource];
+        watchedState.rssLinks = [...watchedState.rssLinks, rssLink];
         return { newSource, updatedPosts };
       })
       .catch((err) => console.log());

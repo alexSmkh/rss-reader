@@ -15,7 +15,18 @@ const changeLanguage = (language) => {
 
   const rssInput = document.getElementById('rss-input');
   rssInput.setAttribute('placeholder', i18n.t('header.form.placeholder'));
-}
+};
+
+const showBtnSpinner = (btn) => {
+  const spinner = document.createElement('span');
+  spinner.classList.add('spinner-border', 'spinner-border-sm', 'ml-1'); 
+  btn.textContent = i18n.t('header.form.btn.loading');
+  btn.appendChild(spinner);
+};
+
+const hideBtnSpinner = (btn) => {
+  btn.textContent = i18n.t('header.form.btn.content');
+};
 
 const getNumberOfUnreadPosts = (rssSourceId, allPosts) => {
   const currentPosts = allPosts.filter((post) => {
@@ -168,8 +179,7 @@ const buildPostCard = (watchedState, post) => {
     card.classList.replace('shadow', 'shadow-sm');
     card.style.transition = 'box-shadow .5s';
     card.style.cursor = 'pointer';
-    }
-  );
+  });
 
   card.addEventListener('mouseleave', (e) => {
     e.preventDefault();
@@ -183,7 +193,7 @@ const buildPostCard = (watchedState, post) => {
   // const realiseDate = document.createElement('p');
   // realiseDate.classList.add('text-muted');
   // realiseDate.textContent = post.pubDate;
-  
+
   // cardFooter.appendChild(realiseDate);
   // card.appendChild(cardFooter);
 
@@ -364,7 +374,7 @@ const renderSucceedFeedback = (elemets) => {
   const { input, form } = elemets;
   const feedback = document.createElement('div');
   feedback.classList.add('valid-feedback');
-  feedback.textContent = 'Rss has been loaded!';
+  feedback.textContent = i18n.t('header.form.succeedFeedback');
 
   input.classList.add('is-valid');
   input.after(feedback);
@@ -404,11 +414,14 @@ const processStateHandler = (processState, elements) => {
     case 'filling':
       submit.disabled = false;
       renderSucceedFeedback(elements);
+      hideBtnSpinner(submit);
       break;
     case 'sending':
       submit.disabled = true;
+      showBtnSpinner(submit);
       break;
     case 'failed':
+      hideBtnSpinner(submit);
       submit.disabled = false;
       break;
     default:
@@ -435,7 +448,7 @@ export default (state, elements) => {
       case 'activeSourceId':
         renderRssContent(watchedState);
         break;
-      case 'language': 
+      case 'language':
         changeLanguage(value);
         break;
       default:
