@@ -1,9 +1,12 @@
 import * as yup from 'yup';
 import axios from 'axios';
 import _ from 'lodash';
-import initView from './view';
+import i18n from 'i18next';
 
-const getRssSourceData= (parsedRss) => {
+import initView from './view';
+import resources from './locales/index';
+
+const getRssSourceData = (parsedRss) => {
   const title = parsedRss.querySelector('title').textContent;
   const description = parsedRss.querySelector('description').textContent;
   const link = parsedRss.querySelector('link').textContent;
@@ -20,7 +23,7 @@ const getRssPostsData = (parsedRss, sourceId) => {
     const link = item.querySelector('link').textContent;
     const pubDate = item.querySelector('pubDate').textContent;
     const date = new Date(pubDate);
-    const id = _.uniqueId();    
+    const id = _.uniqueId();
     posts.push({
       title,
       description,
@@ -40,13 +43,21 @@ const parseStringToHtml = (rawStr, mimeType) => {
 };
 
 const validateRssLink = (formFields) => {
+  yup.setLocale({
+    string: {
+      url: i18n.t('errors.formValidation.url'),
+    },
+  });
+
   const schema = yup.object().shape({
     input: yup
       .string()
       .url()
-      .matches(/.(rss|xml)$/, 'This source doesn\'t contain valid rss')
       .required()
+      .matches(/.(rss|xml)$/, i18n.t('errors.formValidation.itsNotRss'))
   });
+
+  
 
   try {
     schema.validateSync(formFields, { abortEarly: false });
@@ -54,9 +65,13 @@ const validateRssLink = (formFields) => {
   } catch (e) {
     return e.errors[0];
   }
-}
+};
 
 export default async () => {
+  i18n.init({
+    lng: 'en',
+    resources,
+  });
   const state = {
     form: {
       valid: true,
@@ -69,13 +84,23 @@ export default async () => {
     rssSources: [],
     activeSourceId: null,
     posts: [],
+    language: 'en',
   };
 
   const submit = document.getElementById('add-content-btn');
-  const input = document.getElementById('rss-link-input');
-  const form = document.getElementById('rss-link-form');
-  const elements = { submit, input, form }; 
+  const input = document.getElementById('rss-input');
+  const form = document.getElementById('rss-form');
+  const elements = { submit, input, form };
   const watchedState = initView(state, elements);
+  const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+
+  changeLangBtns.forEach((btn) => {
+    btn.addEventListener('click', (e) => {
+      const lang = e.target.getAttribute('data-lang');
+      if (lang === watchedState.language) return;
+      watchedState.language = lang;
+    });
+  });
 
   input.addEventListener('input', (e) => {
     e.preventDefault();
@@ -95,31 +120,33 @@ export default async () => {
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     watchedState.form.processState = 'sending';
-    
+
     const data = new FormData(e.target);
     const rssLink = data.get('rss-link');
     const proxy = 'https://api.allorigins.win/get?url=';
-    
+
     axios
       .get(`${proxy}${rssLink}`)
       .then((response) => {
         watchedState.form.fields.input = '';
         watchedState.form.processState = 'filling';
-        
+
         const parsedRss = parseStringToHtml(response.data.contents, 'text/xml');
-        const newSource = getRssSourceData(parsedRss, watchedState.activeSourceId);
+        const newSource = getRssSourceData(
+          parsedRss,
+          watchedState.activeSourceId
+        );
         if (!watchedState.activeSourceId) {
           watchedState.activeSourceId = newSource.id;
         }
         const postsOfNewSource = getRssPostsData(parsedRss, newSource.id);
-        return { newSource, postsOfNewSource};
+        return { newSource, postsOfNewSource };
       })
       .then(({ newSource, postsOfNewSource }) => {
         watchedState.posts = [...watchedState.posts, ...postsOfNewSource];
         watchedState.rssSources = [...watchedState.rssSources, newSource];
-        watchedState.contentSectionState = 'rss-list';
         return { newSource, updatedPosts };
       })
       .catch((err) => console.log());
-  })
+  });
 };

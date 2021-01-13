@@ -3,47 +3,43 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <!-- <link rel="stylesheet" href="style.css"> -->
+    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.ico"/>
     <script src="style.bundle.js"></script>
-    <title>Document</title>
+    <title>Rss-reader</title>
   </head>
   <body>
     <main class="flex-grow-1" role="main">
       <section class="container-fluid bg-dark p-3 shadow">        
         <div class="col-md-10 col-lg-8 mx-auto text-white">
           <div class="header-top d-flex justify-content-between align-items-center">
-          <h1 class="display-4">RSS Reader</h1>
+          <h1 class="display-4" data-translation-key="header.title">RSS Reader</h1>
           <div class="btn-group btn-group-toggle" data-toggle="langs">
-              <label class="btn btn-secondary active">
-                <input type="radio" name="options" id="lang-en" checked>EN
-              </label>
-              <label class="btn btn-secondary">
-                <input type="radio" name="options" id="lang-ru">RU
-              </label>
+            <button type="button" class="btn btn-secondary active" data-lang="en" name="change-language">EN</button>
+            <button type="button" class="btn btn-secondary" data-lang="ru" name="change-language">RU</button>
             </div>
           </div>
           
-          <p class="lead">Start reading RSS today!</p>
+          <p class="lead" data-translation-key="header.subtitle">Start reading RSS today!</p>
           <hr class="my-4 bg-secondary"></th>
-          <form id="rss-link-form" class="rss-form mb-3">
+          <form id="rss-form" class="rss-form mb-3">
             <div class="form-row">
               <div class="col">
-                <input id="rss-link-input" type="text" class="form-control focus-effect" placeholder="RSS Link" name="rss-link" required >
+                <input id="rss-input" type="text" class="form-control focus-effect" placeholder="RSS Link" name="rss-link" required >
               </div>
               <div class="col-auto">
-                <input id="add-content-btn" type="submit" class="btn btn-secondary px-4" value="Add">
+                <button id="add-content-btn" type="submit" class="btn btn-secondary px-4" data-translation-key="header.form.btn">Add</button>
               </div>
             </div>
           </form>
-          <p class="text-muted">Example: https://ru.hexlet.io/lessons.rss</p>
+          <p class="text-muted" data-translation-key="header.form.hint">Example: https://ru.hexlet.io/lessons.rss</p>
         </div>
       </section>
 
       <section class="container-fluid col-md-10 col-lg-8 mt-4 mb-5">
         <div class="row" name="rss-content">
           <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-5">
-            <img src="assets/images/feeds.png">        
-            <p class="h3 mb-2">Which sources would you like to follow?</p>
+            <img src="assets/images/feeds.png" >        
+            <p class="h3 mb-2" data-translation-key="startPageContent.title">Which sources would you like to follow?</p>
           </div>
         </div>
       </section>
@@ -51,7 +47,7 @@
 
     <footer class="fixed-bottom bg-dark d-flex justify-content-center align-items-center mt-4 py-3">
         <div class="text-light">
-          created by <a href="https://github.com/alexSmkh" target="_blank"><img src="/assets/images/github.svg" style="height: 25px"></a>
+          <span class="mr-1">created by</span><a href="https://github.com/alexSmkh" target="_blank"><img src="/assets/images/github.svg" style="height: 25px"></a>
         </div>
     </footer>
   </body>

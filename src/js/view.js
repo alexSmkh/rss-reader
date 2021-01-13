@@ -1,17 +1,27 @@
 import onChange from 'on-change';
-import _, { assignWith, divide } from 'lodash';
-import { number } from 'yup/lib/locale';
+import _ from 'lodash';
+import i18n from 'i18next';
+
+const changeLanguage = (language) => {
+  i18n.changeLanguage(language);
+
+  const elementsForTranslate = document.querySelectorAll(
+    '[data-translation-key]'
+  );
+  elementsForTranslate.forEach((element) => {
+    const translationKey = element.dataset.translationKey;
+    element.textContent = i18n.t(translationKey);
+  });
+
+  const rssInput = document.getElementById('rss-input');
+  rssInput.setAttribute('placeholder', i18n.t('header.form.placeholder'));
+}
 
 const getNumberOfUnreadPosts = (rssSourceId, allPosts) => {
-  console.log('allPosts', allPosts);
-
   const currentPosts = allPosts.filter((post) => {
-    console.log('post.id: ', post.id, '  rssId: ', rssSourceId);
     return post.sourceId === rssSourceId;
   });
-  console.log('currentPosts', currentPosts);
   const counts = _.countBy(currentPosts, ({ unread }) => unread);
-  console.log('counts', counts);
   return counts.true;
 };
 
@@ -90,7 +100,8 @@ const buildPostCard = (watchedState, post) => {
 
   const redirectLink = document.createElement('a');
   redirectLink.setAttribute('href', post.link);
-  redirectLink.textContent = 'Preview';
+  redirectLink.textContent = i18n.t('post.btn');
+  redirectLink.setAttribute('data-translation-key', 'post.btn');
   redirectLink.classList.add('btn', 'btn-secondary', 'mr-1');
 
   linkWrapper.appendChild(redirectLink);
@@ -112,13 +123,16 @@ const buildPostCard = (watchedState, post) => {
     'd-flex',
     'align-items-center'
   );
-  newLabel.textContent = 'NEW!';
+  newLabel.textContent = i18n.t('post.new');
+  newLabel.setAttribute('data-translation-key', 'post.new');
+
   newLabel.style.maxHeight = '22px';
   cardHeader.appendChild(newLabel);
 
   const markAsReadLink = document.createElement('a');
   markAsReadLink.setAttribute('href', '#');
-  markAsReadLink.textContent = 'Mark as read';
+  markAsReadLink.textContent = i18n.t('post.markAsRead');
+  markAsReadLink.setAttribute('data-translation-key', 'post.markAsRead');
   markAsReadLink.classList.add('text-muted', 'ml-2');
   markAsReadLink.addEventListener('click', (e) => {
     e.preventDefault();
@@ -137,7 +151,6 @@ const buildPostCard = (watchedState, post) => {
       `[data-source-id="${post.sourceId}"] .badge`
     );
     const notificationNumber = parseInt(badge.textContent);
-    console.log('number', notificationNumber);
 
     if (notificationNumber === 1) {
       badge.remove();
@@ -164,6 +177,15 @@ const buildPostCard = (watchedState, post) => {
     card.style.transition = 'box-shadow .5s';
     card.style.cursor = null;
   });
+
+  // const cardFooter = document.createElement('div');
+  // cardFooter.classList.add('card-footer');
+  // const realiseDate = document.createElement('p');
+  // realiseDate.classList.add('text-muted');
+  // realiseDate.textContent = post.pubDate;
+  
+  // cardFooter.appendChild(realiseDate);
+  // card.appendChild(cardFooter);
 
   return card;
 };
@@ -378,12 +400,9 @@ const renderErrors = (error, elements) => {
 
 const processStateHandler = (processState, elements) => {
   const { submit } = elements;
-  let count = 1;
   switch (processState) {
     case 'filling':
       submit.disabled = false;
-      console.log(count);
-      count += 1;
       renderSucceedFeedback(elements);
       break;
     case 'sending':
@@ -415,6 +434,9 @@ export default (state, elements) => {
         break;
       case 'activeSourceId':
         renderRssContent(watchedState);
+        break;
+      case 'language': 
+        changeLanguage(value);
         break;
       default:
         break;
