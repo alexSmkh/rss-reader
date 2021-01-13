@@ -5,6 +5,9 @@ import i18n from 'i18next';
 const changeLanguage = (language) => {
   i18n.changeLanguage(language);
 
+  const btns = document.querySelectorAll('[name="change-language"]');
+  btns.forEach((btn) => btn.classList.toggle('active'));
+
   const elementsForTranslate = document.querySelectorAll(
     '[data-translation-key]'
   );
