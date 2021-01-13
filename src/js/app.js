@@ -42,11 +42,14 @@ const parseStringToHtml = (rawStr, mimeType) => {
   return parser.parseFromString(rawStr, mimeType);
 };
 
-const validateRssLink = (formFields) => {
+const validateRssLink = (watchedState) => {
   yup.setLocale({
     string: {
       url: i18n.t('errors.formValidation.url'),
     },
+    mixed : {
+      required: i18n.t('errors.formValidation.required'),
+    }
   });
 
   const schema = yup.object().shape({
@@ -55,14 +58,16 @@ const validateRssLink = (formFields) => {
       .url()
       .required()
       .matches(/.(rss|xml)$/, i18n.t('errors.formValidation.itsNotRss'))
+      // .test('Existing link', i18n.t('linkAlreadyExists'), (enteredLink) => {
+      //   return watchedState.rssLinks.includes(enteredLink);
+      // })
   });
-
-  
-
+  console.log('validation', watchedState.form.fields)
   try {
-    schema.validateSync(formFields, { abortEarly: false });
+    schema.validateSync(watchedState.form.fields, { abortEarly: false });
     return null;
   } catch (e) {
+    // console.log(e);
     return e.errors[0];
   }
 };
@@ -105,16 +110,10 @@ export default async () => {
   input.addEventListener('input', (e) => {
     e.preventDefault();
     const rssLink = e.target.value;
-    watchedState.form.input = rssLink;
-    const error = validateRssLink(watchedState.form, state);
+    watchedState.form.fields.input = rssLink;
+    const error = validateRssLink(watchedState);
+    watchedState.form.valid = !!error;
     watchedState.form.error = error;
-
-    if (watchedState.form.error) {
-      watchedState.form.valid = false;
-      return;
-    }
-
-    watchedState.form.valid = true;
   });
 
   form.addEventListener('submit', (e) => {

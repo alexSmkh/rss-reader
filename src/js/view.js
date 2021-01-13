@@ -392,7 +392,7 @@ const renderErrors = (error, elements) => {
 
   const feedback = document.createElement('div');
   feedback.classList.add('invalid-feedback');
-  feedback.textContent = _.capitalize(error);
+  feedback.textContent = error;
 
   input.classList.add('is-invalid');
   input.after(feedback);
