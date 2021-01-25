@@ -4,7 +4,6 @@ import i18n from 'i18next';
 
 const changeLanguage = (language) => {
   i18n.changeLanguage(language);
-
   const btns = document.querySelectorAll('[name="change-language"]');
   btns.forEach((btn) => btn.classList.toggle('active'));
 
@@ -22,7 +21,7 @@ const changeLanguage = (language) => {
 
 const showBtnSpinner = (btn) => {
   const spinner = document.createElement('span');
-  spinner.classList.add('spinner-border', 'spinner-border-sm', 'ml-1'); 
+  spinner.classList.add('spinner-border', 'spinner-border-sm', 'ml-1');
   btn.textContent = i18n.t('header.form.btn.loading');
   btn.appendChild(spinner);
 };
@@ -39,20 +38,57 @@ const getNumberOfUnreadPosts = (rssSourceId, allPosts) => {
   return counts.true;
 };
 
-const buildRemoveIcon = (watchedState, rssSourceId) => {
+const hideModalDialog = (modal, modalBackdrop) => {
+  modal.style.display = 'none';
+  modal.removeAttribute('aria-modal');
+  modal.setAttribute('aria-hidden', 'true');
+  modalBackdrop.style.display = 'none';
+};
+
+const showModalDialog = (post) => {
+  const modal = document.getElementById('modal');
+  const modalBackdrop = document.querySelector('.modal-backdrop');
+
+  const modalTitle = document.querySelector('.modal-title');
+  modalTitle.textContent = post.title;
+
+  const headerCloseBtn = document.querySelector('.modal-header > .close');
+  headerCloseBtn.addEventListener('click', () => hideModalDialog(modal));
+
+  const modalBodyContent = document.querySelector('.modal-body > p');
+  modalBodyContent.innerHTML = post.description;
+
+  const closeBtn = document.getElementById('modal-close-btn');
+  closeBtn.addEventListener('click', () => {
+    hideModalDialog(modal, modalBackdrop);
+  });
+  const openBtn = document.querySelector('[data-open="modal"');
+  openBtn.addEventListener('click', () => {
+    window.open(post.link, '_blank');
+    hideModalDialog(modal, modalBackdrop);
+  });
+
+  modal.classList.add('show');
+  modal.style.display = 'block';
+  modal.setAttribute('aria-modal', 'true');
+  modal.removeAttribute('aria-hidden');
+  modalBackdrop.style.display = 'block';
+};
+
+const buildRemoveIcon = (watchedState, rssSource) => {
   const removeIcon = document.createElement('img');
   removeIcon.classList.add('remove-icon', 'ml-2');
   removeIcon.setAttribute('src', 'assets/images/x-circle.svg');
-  removeIcon.setAttribute('data-remove-icon-for', rssSourceId);
+  removeIcon.setAttribute('data-remove-icon-for', rssSource.id);
   removeIcon.style.width = '20px';
 
   removeIcon.addEventListener('click', (e) => {
     e.stopPropagation();
     const updatedRssSources = watchedState.rssSources.filter(
-      ({ id }) => id !== rssSourceId
+      ({ id }) => id !== rssSource.id
     );
     const updatedPosts = watchedState.posts.filter(
-      ({ sourceId }) => sourceId !== rssSourceId
+      ({ sourceId }) => sourceId !== rssSource.id
     );
 
     watchedState.posts = updatedPosts;
@@ -63,10 +99,10 @@ const buildRemoveIcon = (watchedState, rssSourceId) => {
       return;
     }
 
-    if (rssSourceId === watchedState.activeSourceId) {
+    if (rssSource.id === watchedState.activeSourceId) {
       watchedState.activeSourceId = updatedRssSources[0].id;
     }
-
+    watchedState.rssLinks = watchedState.rssLinks.filter((link) => link !== rssSource.link);
     watchedState.rssSources = updatedRssSources;
   });
 
@@ -81,6 +117,35 @@ const buildRemoveIcon = (watchedState, rssSourceId) => {
   });
 
   return removeIcon;
+};
+
+const updateUnreadPosts = (watchedState, post) => {
+  const updatedPosts = watchedState.posts.map((item) => {
+    if (item.id !== post.id) return item;
+    item.unread = false;
+    return item;
+  });
+  watchedState.posts = updatedPosts;
+};
+
+const markPostAsRead = (post, markAsReadLink, cardHeader, postTitle) => {
+  markAsReadLink.remove();
+
+  const newLabel = cardHeader.querySelector('span');
+  newLabel.remove();
+
+  const badge = document.querySelector(
+    `[data-source-id="${post.sourceId}"] .badge`
+  );
+
+  const notificationNumber = parseInt(badge.textContent);
+  if (notificationNumber === 1) {
+    badge.remove();
+    return;
+  }
+
+  postTitle.classList.replace('font-weight-bold', 'font-weight-normal');
+  badge.textContent = notificationNumber - 1;
 };
 
 const buildPostCard = (watchedState, post) => {
@@ -107,18 +172,18 @@ const buildPostCard = (watchedState, post) => {
 
   const postDescription = document.createElement('p');
   postDescription.classList.add('card-text');
-  postDescription.textContent = post.description;
+  postDescription.innerHTML = `${post.description.slice(0, 100)} ...`;
 
   const linkWrapper = document.createElement('div');
   linkWrapper.classList.add('wrapper');
 
-  const redirectLink = document.createElement('a');
-  redirectLink.setAttribute('href', post.link);
-  redirectLink.textContent = i18n.t('post.btn');
-  redirectLink.setAttribute('data-translation-key', 'post.btn');
-  redirectLink.classList.add('btn', 'btn-secondary', 'mr-1');
+  const previewLink = document.createElement('a');
+  previewLink.setAttribute('href', '#');
+  previewLink.textContent = i18n.t('post.btn');
+  previewLink.setAttribute('data-translation-key', 'post.btn');
+  previewLink.classList.add('btn', 'btn-secondary', 'mr-1');
 
-  linkWrapper.appendChild(redirectLink);
+  linkWrapper.appendChild(previewLink);
   cartBody.appendChild(postDescription);
   cartBody.appendChild(linkWrapper);
   card.appendChild(cartBody);
@@ -150,32 +215,18 @@ const buildPostCard = (watchedState, post) => {
   markAsReadLink.classList.add('text-muted', 'ml-2');
   markAsReadLink.addEventListener('click', (e) => {
     e.preventDefault();
-    markAsReadLink.remove();
-
-    const newLabel = cardHeader.querySelector('span');
-    newLabel.remove();
-    const updatedPosts = watchedState.posts.map((item) => {
-      if (item.id !== post.id) return item;
-      item.unread = false;
-      return item;
-    });
-    watchedState.posts = updatedPosts;
-
-    const badge = document.querySelector(
-      `[data-source-id="${post.sourceId}"] .badge`
-    );
-    const notificationNumber = parseInt(badge.textContent);
-
-    if (notificationNumber === 1) {
-      badge.remove();
-      return;
-    }
-
-    postTitle.classList.replace('font-weight-bold', 'font-weight-normal');
-    badge.textContent = notificationNumber - 1;
+    updateUnreadPosts(watchedState, post);
+    markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
   });
-
   linkWrapper.appendChild(markAsReadLink);
+
+  previewLink.addEventListener('click', (e) => {
+    showModalDialog(post);
+    if (post.unread) {
+      updateUnreadPosts(watchedState, post);
+      markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
+    }
+  });
 
   card.addEventListener('mouseenter', (e) => {
     e.preventDefault();
@@ -190,15 +241,6 @@ const buildPostCard = (watchedState, post) => {
     card.style.transition = 'box-shadow .5s';
     card.style.cursor = null;
   });
-
-  // const cardFooter = document.createElement('div');
-  // cardFooter.classList.add('card-footer');
-  // const realiseDate = document.createElement('p');
-  // realiseDate.classList.add('text-muted');
-  // realiseDate.textContent = post.pubDate;
-
-  // cardFooter.appendChild(realiseDate);
-  // card.appendChild(cardFooter);
 
   return card;
 };
@@ -289,7 +331,7 @@ const buildRssSourceCard = (watchedState, rssSource) => {
     }
 
     card.style.cursor = 'pointer';
-    const removeIcon = buildRemoveIcon(watchedState, rssSource.id);
+    const removeIcon = buildRemoveIcon(watchedState, rssSource);
     notificationWrapper.appendChild(removeIcon);
   });
 
@@ -377,6 +419,7 @@ const renderSucceedFeedback = (elemets) => {
   const { input, form } = elemets;
   const feedback = document.createElement('div');
   feedback.classList.add('valid-feedback');
+  feedback.setAttribute('data-translation-key', 'header.form.succeedFeedback');
   feedback.textContent = i18n.t('header.form.succeedFeedback');
 
   input.classList.add('is-valid');
