@@ -6,19 +6,48 @@ import i18n from 'i18next';
 import initView from './view';
 import resources from './locales/index';
 
+const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url=';
+
+const checkUpdates = (watchedState) => {
+  const timeoutDelay = 5000;
+  watchedState.rssSources.forEach(async (rssSource) => {
+    axios
+      .get(`${corsProxy}${encodeURIComponent(rssSource.link)}`)
+      .then((response) => {
+        const parsedRss = parseRssContent(response.data.contents, 'text/xml');
+        const posts = parsedRss.querySelectorAll('item');
+        const newPosts = [...posts].filter((item) => {
+          const postPubDate = new Date(
+            item.querySelector('pubDate').textContent
+          );
+          return rssSource.lastUpdate.getTime() < postPubDate.getTime();
+        });
+        if (newPosts.length !== 0) {
+          const newPostsData = newPosts.map((post) =>
+            getRssPostsData(post, rssSource.id)
+          );
+          watchedState.posts = [...newPostsData, ...watchedState.posts];
+          watchedState.lastUpdate = newPostsData[0].pubDate;
+        }
+      });
+  });  
+  setTimeout(() => checkUpdates(watchedState), timeoutDelay);
+};
+
 const removeTrailingSlash = (url) => {
   if (url.endsWith('/')) {
     return url.slice(0, -1);
   }
   return url;
-}
+};
 
-const getRssSourceData = (parsedRss) => {
+const getRssSourceData = (parsedRss, sourceLink) => {
   const title = parsedRss.querySelector('title').textContent;
   const description = parsedRss.querySelector('description').textContent;
-  const link = parsedRss.querySelector('link').textContent;
   const id = _.uniqueId();
-  return { title, description, link, id };
+  const lastUpdate = new Date(parsedRss.querySelector('pubDate').textContent);
+  
+  return { title, description, link: sourceLink, id, lastUpdate };
 };
 
 const getRssPostsData = (parsedRss, sourceId) => {
@@ -44,9 +73,13 @@ const getRssPostsData = (parsedRss, sourceId) => {
   return posts;
 };
 
-const parseStringToHtml = (rawStr, mimeType) => {
+const parseRssContent = (rssContent, mimeType) => {
   const parser = new DOMParser();
-  return parser.parseFromString(rawStr, mimeType);
+  const content = parser.parseFromString(rssContent, mimeType);
+  if (content.querySelector('parsererror')) { 
+    return null;
+  }
+  return content
 };
 
 const validateRssLink = (watchedState) => {
@@ -64,13 +97,15 @@ const validateRssLink = (watchedState) => {
       .string()
       .url()
       .required()
-      .matches(/.(rss|xml)($|\/$)/, i18n.t('errors.formValidation.itsNotRss'))
+      .matches(
+        /(\/feeds?)$|.(rss|xml)($|\/$)/,
+        i18n.t('errors.formValidation.itsNotRss')
+      )
       .test(
         'Existing link',
         i18n.t('errors.formValidation.rssAlreadyExists'),
-        (enteredLink) =>  !watchedState.rssLinks.includes(
-            removeTrailingSlash(enteredLink)
-          )
+        (enteredLink) =>
+          !watchedState.rssLinks.includes(removeTrailingSlash(enteredLink))
       ),
   });
 
@@ -133,19 +168,20 @@ export default async () => {
 
     const data = new FormData(e.target);
     const rssLink = removeTrailingSlash(data.get('rss-link'));
-    const proxy = 'https://api.allorigins.win/get?url=';
-
+        
     axios
-      .get(`${proxy}${rssLink}`)
+      .get(`${corsProxy}${encodeURIComponent(rssLink)}`)
       .then((response) => {
         watchedState.form.fields.input = '';
         watchedState.form.processState = 'filling';
 
-        const parsedRss = parseStringToHtml(response.data.contents, 'text/xml');
-        const newSource = getRssSourceData(
-          parsedRss,
-          watchedState.activeSourceId
-        );
+        const parsedRss = parseRssContent(response.data.contents, 'text/xml');
+        if (!parsedRss) {
+          console.log('errrror');
+          return;
+        }
+
+        const newSource = getRssSourceData(parsedRss, rssLink);
         if (!watchedState.activeSourceId) {
           watchedState.activeSourceId = newSource.id;
         }
@@ -160,4 +196,6 @@ export default async () => {
       })
       .catch((err) => console.log());
   });
+
+  checkUpdates(watchedState);
 };
