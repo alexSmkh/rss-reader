@@ -18,10 +18,18 @@ export default {
         succeedFeedback: 'Rss has been loaded!',
       },
     },
+    notificationForPostList: {
+      beforeBadge: 'Show',
+      afterBadge: 'new posts',
+    },
     post: {
       btn: 'Preview',
       markAsRead: 'Mark as read',
       new: 'NEW!',
+    },
+    modal: {
+      closeBtn: 'Close',
+      openBtn: 'Open',
     },
     startPageContent: {
       title: 'Which sources would you like to follow?',
@@ -32,7 +40,12 @@ export default {
         itsNotRss: "This source doesn't contain valid rss",
         required: 'Input is a required field',
         rssAlreadyExists: 'The entered RSS source is already exist',
+        isNotSupported: 'This resource is not supported',
       },
+    },
+    networkError: 'Network Problems. Try again',
+    toastError: {
+      title: 'Error',
     },
   },
 };

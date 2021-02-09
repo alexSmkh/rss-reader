@@ -1,6 +1,7 @@
 import onChange from 'on-change';
 import _ from 'lodash';
 import i18n from 'i18next';
+import { number } from 'yup';
 
 const changeLanguage = (language) => {
   i18n.changeLanguage(language);
@@ -75,23 +76,37 @@ const showModalDialog = (post) => {
   modalBackdrop.style.display = 'block';
 };
 
-const buildRemoveIcon = (watchedState, rssSource) => {
+const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
   const removeIcon = document.createElement('img');
-  removeIcon.classList.add('remove-icon', 'ml-2');
+  removeIcon.classList.add('delete-icon', 'ml-2');
   removeIcon.setAttribute('src', 'assets/images/x-circle.svg');
-  removeIcon.setAttribute('data-remove-icon-for', rssSource.id);
   removeIcon.style.width = '20px';
 
   removeIcon.addEventListener('click', (e) => {
     e.stopPropagation();
-    const updatedRssSources = watchedState.rssSources.filter(
-      ({ id }) => id !== rssSource.id
-    );
-    const updatedPosts = watchedState.posts.filter(
-      ({ sourceId }) => sourceId !== rssSource.id
+    const updatedRssSources = watchedState.rssSources.reduce(
+      (acc, rssSource) => {
+        if (rssSource.id !== rssSourceOfTargetElement.id) {
+          const rssCopy = _.clone(rssSource);
+          rssCopy.lastUpdate = new Date(rssSource.lastUpdate.getTime());
+          acc = [...acc, rssCopy];
+        }
+        return acc;
+      },
+      []
     );
 
+    const updatedPosts = watchedState.posts.reduce((acc, post) => {
+      if (post.sourceId !== rssSourceOfTargetElement.id) {
+        acc = [...acc, _.cloneDeep(post)];
+      }
+      return acc;
+    }, []);
+
     watchedState.posts = updatedPosts;
+    watchedState.rssLinks = watchedState.rssLinks.filter(
+      (link) => link !== rssSourceOfTargetElement.link
+    );
 
     if (updatedRssSources.length === 0) {
       watchedState.activeSourceId = null;
@@ -99,10 +114,10 @@ const buildRemoveIcon = (watchedState, rssSource) => {
       return;
     }
 
-    if (rssSource.id === watchedState.activeSourceId) {
+    if (rssSourceOfTargetElement.id === watchedState.activeSourceId) {
       watchedState.activeSourceId = updatedRssSources[0].id;
     }
-    watchedState.rssLinks = watchedState.rssLinks.filter((link) => link !== rssSource.link);
+
     watchedState.rssSources = updatedRssSources;
   });
 
@@ -138,14 +153,45 @@ const markPostAsRead = (post, markAsReadLink, cardHeader, postTitle) => {
     `[data-source-id="${post.sourceId}"] .badge`
   );
 
-  const notificationNumber = parseInt(badge.textContent);
-  if (notificationNumber === 1) {
+  const numberOfUnreadPosts = parseInt(badge.textContent);
+  if (numberOfUnreadPosts === 1) {
     badge.remove();
     return;
   }
 
   postTitle.classList.replace('font-weight-bold', 'font-weight-normal');
-  badge.textContent = notificationNumber - 1;
+  badge.textContent = numberOfUnreadPosts - 1;
+};
+
+const buildNotificationBadge = () => {
+  const badge = document.createElement('span');
+  badge.classList.add(
+    'badge',
+    'badge-danger',
+    'badge-pill',
+    'p-1',
+    'd-flex',
+    'align-items-center'
+  );
+  badge.textContent = i18n.t('post.new');
+  badge.setAttribute('data-translation-key', 'post.new');
+  badge.style.maxHeight = '22px';
+  return badge;
+};
+
+const buildNotificationBadgeCounter = (numberOfUnreadPosts) => {
+  const notificationBadge = document.createElement('span');
+  notificationBadge.classList.add(
+    'badge',
+    'badge-danger',
+    'badge-pill',
+    'mr-1',
+    'd-flex',
+    'align-items-center'
+  );
+  notificationBadge.textContent = numberOfUnreadPosts;
+  notificationBadge.style.maxHeight = '22px';
+  return notificationBadge;
 };
 
 const buildPostCard = (watchedState, post) => {
@@ -193,20 +239,8 @@ const buildPostCard = (watchedState, post) => {
   }
 
   postTitle.classList.replace('font-weight-normal', 'font-weight-bold');
-  const newLabel = document.createElement('span');
-  newLabel.classList.add(
-    'badge',
-    'badge-danger',
-    'badge-pill',
-    'p-1',
-    'd-flex',
-    'align-items-center'
-  );
-  newLabel.textContent = i18n.t('post.new');
-  newLabel.setAttribute('data-translation-key', 'post.new');
-
-  newLabel.style.maxHeight = '22px';
-  cardHeader.appendChild(newLabel);
+  const badge = buildNotificationBadge();
+  cardHeader.appendChild(badge);
 
   const markAsReadLink = document.createElement('a');
   markAsReadLink.setAttribute('href', '#');
@@ -252,6 +286,7 @@ const buildPostList = (watchedState) => {
   const overflowContainer = document.createElement('div');
   overflowContainer.classList.add('overflow-auto');
   overflowContainer.style.maxHeight = '850px';
+  overflowContainer.setAttribute('name', 'overflow-post-list');
 
   const posts = watchedState.posts.filter((post) => {
     return watchedState.activeSourceId === post.sourceId;
@@ -298,15 +333,9 @@ const buildRssSourceCard = (watchedState, rssSource) => {
   );
 
   if (nubmerOfUnreadPosts) {
-    const notificationBadge = document.createElement('span');
-    notificationBadge.classList.add(
-      'badge',
-      'badge-danger',
-      'badge-pill',
-      'mr-1'
+    const notificationBadge = buildNotificationBadgeCounter(
+      nubmerOfUnreadPosts
     );
-    notificationBadge.textContent = nubmerOfUnreadPosts;
-    notificationBadge.style.maxHeight = '22px';
     notificationWrapper.appendChild(notificationBadge);
   }
 
@@ -331,8 +360,8 @@ const buildRssSourceCard = (watchedState, rssSource) => {
     }
 
     card.style.cursor = 'pointer';
-    const removeIcon = buildRemoveIcon(watchedState, rssSource);
-    notificationWrapper.appendChild(removeIcon);
+    const deleteIcon = buildDeleteIcon(watchedState, rssSource);
+    notificationWrapper.appendChild(deleteIcon);
   });
 
   card.addEventListener('mouseleave', (e) => {
@@ -341,8 +370,8 @@ const buildRssSourceCard = (watchedState, rssSource) => {
       card.classList.replace('shadow-sm', 'shadow');
     }
     card.style.cursor = null;
-    const removeIcon = document.querySelector('.remove-icon');
-    removeIcon.remove();
+    const deleteIcon = document.querySelector('.delete-icon');
+    deleteIcon.remove();
   });
 
   card.addEventListener('click', (e) => {
@@ -400,6 +429,113 @@ const buildRssList = (watchedState) => {
   return rssList;
 };
 
+const renderPostList = (watchedState) => {
+  const postListContainer = document.querySelector(
+    '[name="overflow-post-list"]'
+  );
+  const postList = buildPostList(watchedState);
+  postListContainer.innerHTML = postList;
+};
+
+const buildNotificationContainerForPostList = (watchedState, numberOfNewPosts) => {
+  const container = document.createElement('div');
+  container.classList.add(
+    'mt-0',
+    'mb-2',
+    'rounded',
+    'py-1',
+    'bg-secondary',
+    'text-center',
+    'text-light'
+  );
+  container.setAttribute('name', 'notifications-for-post-list');
+  container.style.position = 'sticky';
+  container.style.top = '0px';
+  container.style.zIndex = '1000';
+  container.style.cursor = 'pointer';
+  console.log('in building');
+
+  const textBeforeBadge = document.createElement('span');
+  textBeforeBadge.textContent = i18n.t('notificationForPostList.beforeBadge');
+
+  const textAfterBadge = document.createElement('span');
+  textAfterBadge.textContent = i18n.t('notificationForPostList.afterBadge');
+
+  const badge = document.createElement('span');
+  badge.classList.add('badge', 'badge-danger', 'mx-1');
+  badge.textContent = `${numberOfNewPosts}`;
+
+  container.appendChild(textBeforeBadge);
+  container.appendChild(badge);
+  container.appendChild(textAfterBadge);
+
+  container.addEventListener('click', (e) => {
+    const overflowContainer = document.querySelector(
+      '[name="overflow-post-list"]'
+    );
+    const posts = watchedState.posts.filter((post) => {
+      return watchedState.activeSourceId === post.sourceId;
+    });
+    overflowContainer.innerHTML = '';
+    posts.forEach((post) =>
+      overflowContainer.appendChild(buildPostCard(watchedState, post))
+    );
+    container.remove();
+  });
+
+  return container;
+};
+
+const renderNotificationBadgeForRssList = (rssSourceId, numberOfNewPosts) => {
+  const rssSourceList = document.querySelector('[name="rss-source-list"]');
+  const rssDOMElement = rssSourceList.querySelector(
+    `[data-source-id="${rssSourceId}"]`
+  );
+  const notificationBadge = rssDOMElement.querySelector('span.badge');
+  if (!notificationBadge) {
+    const numberOfUnreadPosts = getNumberOfUnreadPosts(rssSourceId);
+    notificationBadge = buildNotificationBadge(numberOfUnreadPosts);
+    const badgeWrapper = rssDOMElement.querySelector('.notificatonWrapper');
+    badgeWrapper.prepend(notificationBadge);
+    return;
+  }
+  const unreadPostsNumber = parseInt(notificationBadge.textContent);
+  notificationBadge.textContent = unreadPostsNumber + numberOfNewPosts;
+};
+
+const renderNotificationContainerForPostList = (watchedState, rssSourceId, numberOfNewPosts) => {
+  if (rssSourceId === watchedState.activeSourceId) {
+    const postList = document.querySelector('[name="overflow-post-list"]');
+    let notificationContainer = document.querySelector(
+      '[name="notifications-for-post-list"]'
+    );
+    console.log('notificationDiv', notificationContainer);
+    if (!notificationContainer) {
+      notificationContainer = buildNotificationContainerForPostList(
+        watchedState,
+        numberOfNewPosts
+      );
+    } else {
+      const badge = notificationContainer.querySelector('.badge');
+      const unreadPosts = parseInt(badge.textContent);
+      badge.textContent = unreadPosts + numberOfNewPosts;
+    }
+    postList.prepend(notificationContainer);
+  }
+
+};
+
+const renderUpdates = (watchedState, updates) => {
+  const { rssSourceId, newPosts } = updates;
+  const numberOfNewPosts = newPosts.length;
+  renderNotificationBadgeForRssList(rssSourceId, numberOfNewPosts);
+  renderNotificationContainerForPostList(
+    watchedState,
+    rssSourceId,
+    numberOfNewPosts
+  );
+};
+
 const renderRssContent = (watchedState, elements) => {
   if (watchedState.rssSources.length === 0) {
     renderStartPage();
@@ -433,7 +569,7 @@ const renderSucceedFeedback = (elemets) => {
   }, 3000);
 };
 
-const renderErrors = (error, elements) => {
+const renderValidationErrors = (error, elements) => {
   const { input } = elements;
 
   const prevFeedback = input.nextSibling;
@@ -452,6 +588,35 @@ const renderErrors = (error, elements) => {
 
   input.classList.add('is-invalid');
   input.after(feedback);
+};
+
+const renderErrorAlert = (error, elements) => {
+  const toast = document.createElement('div');
+  toast.classList.add('toast', 'show');
+  toast.setAttribute('role', 'alert');
+  toast.setAttribute('aria-live', 'assertive');
+  toast.setAttribute('aria-atomic', 'true');
+
+  const toastHeader = document.createElement('div');
+  toastHeader.classList.add('toast-header');
+
+  const toastHeaderTitle = document.createElement('strong');
+  toastHeaderTitle.classList.add('mr-auto');
+  toastHeaderTitle.textContent = error.name;
+
+  const toastBody = document.createElement('div');
+  toastBody.classList.add('toast-body');
+  toastBody.textContent = error.message;
+
+  toastHeader.appendChild(toastHeaderTitle);
+  toast.appendChild(toastHeader);
+  toast.appendChild(toastBody);
+
+  const body = document.querySelector('body');
+  body.prepend(toast);
+  setTimeout(() => {
+    toast.remove();
+  }, 3000);
 };
 
 const processStateHandler = (processState, elements) => {
@@ -486,16 +651,22 @@ export default (state, elements) => {
         submit.disabled = !value;
         break;
       case 'form.error':
-        renderErrors(value, elements);
+        renderValidationErrors(value, elements);
         break;
       case 'rssSources':
         renderRssContent(watchedState, elements);
+        break;
+      case 'updates':
+        renderUpdates(watchedState, value);
         break;
       case 'activeSourceId':
         renderRssContent(watchedState);
         break;
       case 'language':
         changeLanguage(value);
+        break;
+      case 'error':
+        renderErrorAlert(value);
         break;
       default:
         break;

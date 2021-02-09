@@ -5,6 +5,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 console.log('dirname', __dirname);
 module.exports = {
+  
   mode: process.env.NODE_ENV || 'development',
   entry: {
     main: path.resolve(__dirname, './src/js/index.js'),

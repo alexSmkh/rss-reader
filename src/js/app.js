@@ -8,32 +8,6 @@ import resources from './locales/index';
 
 const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url=';
 
-const checkUpdates = (watchedState) => {
-  const timeoutDelay = 5000;
-  watchedState.rssSources.forEach(async (rssSource) => {
-    axios
-      .get(`${corsProxy}${encodeURIComponent(rssSource.link)}`)
-      .then((response) => {
-        const parsedRss = parseRssContent(response.data.contents, 'text/xml');
-        const posts = parsedRss.querySelectorAll('item');
-        const newPosts = [...posts].filter((item) => {
-          const postPubDate = new Date(
-            item.querySelector('pubDate').textContent
-          );
-          return rssSource.lastUpdate.getTime() < postPubDate.getTime();
-        });
-        if (newPosts.length !== 0) {
-          const newPostsData = newPosts.map((post) =>
-            getRssPostsData(post, rssSource.id)
-          );
-          watchedState.posts = [...newPostsData, ...watchedState.posts];
-          watchedState.lastUpdate = newPostsData[0].pubDate;
-        }
-      });
-  });  
-  setTimeout(() => checkUpdates(watchedState), timeoutDelay);
-};
-
 const removeTrailingSlash = (url) => {
   if (url.endsWith('/')) {
     return url.slice(0, -1);
@@ -46,25 +20,24 @@ const getRssSourceData = (parsedRss, sourceLink) => {
   const description = parsedRss.querySelector('description').textContent;
   const id = _.uniqueId();
   const lastUpdate = new Date(parsedRss.querySelector('pubDate').textContent);
-  
   return { title, description, link: sourceLink, id, lastUpdate };
 };
 
 const getRssPostsData = (parsedRss, sourceId) => {
+  console.log('parsedRFss',parsedRss)
   const items = parsedRss.querySelectorAll('item');
   const posts = [];
   items.forEach((item) => {
     const title = item.querySelector('title').textContent;
     const description = item.querySelector('description').textContent;
     const link = item.querySelector('link').textContent;
-    const pubDate = item.querySelector('pubDate').textContent;
-    const date = new Date(pubDate);
+    const pubDate = new Date(item.querySelector('pubDate').textContent);
     const id = _.uniqueId();
     posts.push({
       title,
       description,
       link,
-      pubDate: date,
+      pubDate,
       sourceId,
       id,
       unread: true,
@@ -76,10 +49,41 @@ const getRssPostsData = (parsedRss, sourceId) => {
 const parseRssContent = (rssContent, mimeType) => {
   const parser = new DOMParser();
   const content = parser.parseFromString(rssContent, mimeType);
-  if (content.querySelector('parsererror')) { 
+  if (content.querySelector('parsererror')) {
     return null;
   }
-  return content
+  return content;
+};
+
+const checkUpdates = (watchedState) => {
+  const timeoutDelay = 5000;
+  watchedState.rssSources.forEach(async (rssSource) => {
+    axios
+      .get(`${corsProxy}${encodeURIComponent(rssSource.link)}`)
+      .then((response) => {
+        const parsedRss = parseRssContent(response.data, 'text/xml');
+        const lastUpdate = new Date(
+          parsedRss.querySelector('pubDate').textContent
+        );
+        if (rssSource.lastUpdate.getTime() >= lastUpdate.getTime()) return;
+        const posts = getRssPostsData(parsedRss, rssSource.id);
+        const newPosts = posts.filter((post) => (
+          rssSource.lastUpdate.getTime() < post.pubDate.getTime()
+        ));
+        watchedState.posts.unshift(...newPosts);
+        rssSource.lastUpdate = newPosts[0].pubDate;
+        return { rssSourceId: rssSource.id, newPosts };
+      })
+      .then((update) => {
+        if (update) {
+          watchedState.updates = update;
+        }
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  });
+  setTimeout(() => checkUpdates(watchedState), timeoutDelay);
 };
 
 const validateRssLink = (watchedState) => {
@@ -95,12 +99,12 @@ const validateRssLink = (watchedState) => {
   const schema = yup.object().shape({
     input: yup
       .string()
-      .url()
+      // .url()
       .required()
-      .matches(
-        /(\/feeds?)$|.(rss|xml)($|\/$)/,
-        i18n.t('errors.formValidation.itsNotRss')
-      )
+      // .matches(
+      //   /(\/feeds?)$|.(rss|xml)($|\/$)/,
+      //   i18n.t('errors.formValidation.itsNotRss')
+      // )
       .test(
         'Existing link',
         i18n.t('errors.formValidation.rssAlreadyExists'),
@@ -135,6 +139,7 @@ export default async () => {
     rssSources: [],
     activeSourceId: null,
     posts: [],
+    updates: [],
     language: 'en',
   };
 
@@ -168,17 +173,15 @@ export default async () => {
 
     const data = new FormData(e.target);
     const rssLink = removeTrailingSlash(data.get('rss-link'));
-        
+
     axios
       .get(`${corsProxy}${encodeURIComponent(rssLink)}`)
       .then((response) => {
         watchedState.form.fields.input = '';
         watchedState.form.processState = 'filling';
-
-        const parsedRss = parseRssContent(response.data.contents, 'text/xml');
+        const parsedRss = parseRssContent(response.data, 'text/xml');
         if (!parsedRss) {
-          console.log('errrror');
-          return;
+          throw new Error(`error parse`);
         }
 
         const newSource = getRssSourceData(parsedRss, rssLink);
@@ -189,12 +192,15 @@ export default async () => {
         return { newSource, postsOfNewSource };
       })
       .then(({ newSource, postsOfNewSource }) => {
-        watchedState.posts = [...watchedState.posts, ...postsOfNewSource];
-        watchedState.rssSources = [...watchedState.rssSources, newSource];
-        watchedState.rssLinks = [...watchedState.rssLinks, rssLink];
-        return { newSource, updatedPosts };
+        watchedState.posts.push(...postsOfNewSource);
+        watchedState.rssSources.push(newSource);
+        watchedState.rssLinks.push(rssLink);
       })
-      .catch((err) => console.log());
+      .catch((err) => {
+        watchedState.form.processState = 'failed';
+        watchedState.error = err;
+        console.log(err);
+      });
   });
 
   checkUpdates(watchedState);

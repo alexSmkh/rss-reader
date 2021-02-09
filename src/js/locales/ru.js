@@ -18,10 +18,18 @@ export default {
         succeedFeedback: 'Rss был загружен!',
       },
     },
+    notificationForPostList: {
+      beforeBadge: 'Показать',
+      afterBadge: 'новую запись',
+    },
     post: {
       btn: 'Посмотреть',
       markAsRead: 'Отметить прочитанным',
       new: 'НОВОЕ!',
+    },
+    modal: {
+      closeBtn: 'Закрыть',
+      openBtn: 'Перейти',
     },
     startPageContent: {
       title: 'Какие ресурсы вы бы хотели отслеживать?',
@@ -32,7 +40,12 @@ export default {
         itsNotRss: 'Этот источник не содержит допустимого rss',
         required: 'Поле не может быть пустым',
         rssAlreadyExists: 'Введенный RSS-источник уже есть отслеживается',
+        isNotSupported: 'Этот ресурс не поддерживается',
       },
+      networkError: 'Ошибка сети. Попробуйте снова.',
+    },
+    toastError: {
+      title: 'Ошибка',
     },
   },
 };
