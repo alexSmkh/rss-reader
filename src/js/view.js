@@ -1,7 +1,6 @@
 import onChange from 'on-change';
 import _ from 'lodash';
 import i18n from 'i18next';
-import { number } from 'yup';
 
 const changeLanguage = (language) => {
   i18n.changeLanguage(language);
@@ -278,7 +277,13 @@ const buildPostCard = (watchedState, post) => {
 
 const buildPostList = (watchedState) => {
   const postListContainer = document.createElement('div');
-  postListContainer.classList.add('col-8', 'pr-4', 'border-left');
+  postListContainer.classList.add(
+    'col-md-6',
+    'col-lg-7',
+    'col-xl-8',
+    'pr-4',
+    'border-left'
+  );
 
   const overflowContainer = document.createElement('div');
   overflowContainer.classList.add('overflow-auto');
@@ -411,7 +416,11 @@ const renderStartPage = () => {
 
 const buildRssList = (watchedState) => {
   const rssList = document.createElement('div');
-  rssList.classList.add('col-4');
+  rssList.classList.add(
+    'col-md-6',
+    'col-lg-5',
+    'col-xl-4'
+  );
   rssList.setAttribute('name', 'rss-source-list');
 
   const overflowContainer = document.createElement('div');
@@ -585,6 +594,10 @@ const renderErrorAlert = (error, elements) => {
   toast.setAttribute('role', 'alert');
   toast.setAttribute('aria-live', 'assertive');
   toast.setAttribute('aria-atomic', 'true');
+  toast.style.position = 'absolute';
+  toast.style.top = '10px';
+  toast.style.left = '10px';
+  toast.style.zIndex = '1000';
 
   const toastHeader = document.createElement('div');
   toastHeader.classList.add('toast-header');
@@ -593,19 +606,34 @@ const renderErrorAlert = (error, elements) => {
   toastHeaderTitle.classList.add('mr-auto');
   toastHeaderTitle.textContent = error.name;
 
+  const button = document.createElement('button');
+  button.setAttribute('type', 'button');
+  button.classList.add('close');
+  button.setAttribute('aria-label', 'Close');
+
+  const span = document.createElement('span');
+  span.setAttribute('aria-hidden', 'true');
+  span.innerHTML = '&times;';
+
   const toastBody = document.createElement('div');
   toastBody.classList.add('toast-body');
   toastBody.textContent = error.message;
 
+  button.appendChild(span);
   toastHeader.appendChild(toastHeaderTitle);
+  toastHeader.appendChild(button);
   toast.appendChild(toastHeader);
   toast.appendChild(toastBody);
+
+  span.addEventListener('click', (e) => {
+    toast.remove();
+  });
 
   const body = document.querySelector('body');
   body.prepend(toast);
   setTimeout(() => {
     toast.remove();
-  }, 3000);
+  }, 5000);
 };
 
 const processStateHandler = (processState, elements) => {
