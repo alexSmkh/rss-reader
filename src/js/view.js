@@ -220,19 +220,39 @@ const buildPostCard = (watchedState, post) => {
   postDescription.classList.add('card-text');
   postDescription.innerHTML = `${post.description.slice(0, 100)} ...`;
 
-  const linkWrapper = document.createElement('div');
-  linkWrapper.classList.add('wrapper');
+  const elementWrapper = document.createElement('div');
+  elementWrapper.classList.add('wrapper');
 
-  const previewLink = document.createElement('a');
-  previewLink.setAttribute('href', '#');
-  previewLink.textContent = i18n.t('post.btn');
-  previewLink.setAttribute('data-translation-key', 'post.btn');
-  previewLink.classList.add('btn', 'btn-secondary', 'mr-1');
+  const previewBtn = document.createElement('button');
+  previewBtn.textContent = i18n.t('post.btn');
+  previewBtn.setAttribute('data-translation-key', 'post.btn');
+  previewBtn.classList.add('btn', 'btn-secondary', 'mr-1');
+  previewBtn.addEventListener('click', (e) => {
+    showModalDialog(post);
+    if (post.unread) {
+      updateUnreadPosts(watchedState, post);
+      markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
+    }
+  });
 
-  linkWrapper.appendChild(previewLink);
+  elementWrapper.appendChild(previewBtn);
   cartBody.appendChild(postDescription);
-  cartBody.appendChild(linkWrapper);
+  cartBody.appendChild(elementWrapper);
   card.appendChild(cartBody);
+
+  card.addEventListener('mouseenter', (e) => {
+    e.preventDefault();
+    card.classList.replace('shadow', 'shadow-sm');
+    card.style.transition = 'box-shadow .5s';
+    card.style.cursor = 'pointer';
+  });
+
+  card.addEventListener('mouseleave', (e) => {
+    e.preventDefault();
+    card.classList.replace('shadow-sm', 'shadow');
+    card.style.transition = 'box-shadow .5s';
+    card.style.cursor = null;
+  });
 
   if (!post.unread) {
     return card;
@@ -252,30 +272,7 @@ const buildPostCard = (watchedState, post) => {
     updateUnreadPosts(watchedState, post);
     markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
   });
-  linkWrapper.appendChild(markAsReadLink);
-
-  previewLink.addEventListener('click', (e) => {
-    showModalDialog(post);
-    if (post.unread) {
-      updateUnreadPosts(watchedState, post);
-      markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
-    }
-  });
-
-  card.addEventListener('mouseenter', (e) => {
-    e.preventDefault();
-    card.classList.replace('shadow', 'shadow-sm');
-    card.style.transition = 'box-shadow .5s';
-    card.style.cursor = 'pointer';
-  });
-
-  card.addEventListener('mouseleave', (e) => {
-    e.preventDefault();
-    card.classList.replace('shadow-sm', 'shadow');
-    card.style.transition = 'box-shadow .5s';
-    card.style.cursor = null;
-  });
-
+  elementWrapper.appendChild(markAsReadLink);
   return card;
 };
 
@@ -429,14 +426,6 @@ const buildRssList = (watchedState) => {
   return rssList;
 };
 
-const renderPostList = (watchedState) => {
-  const postListContainer = document.querySelector(
-    '[name="overflow-post-list"]'
-  );
-  const postList = buildPostList(watchedState);
-  postListContainer.innerHTML = postList;
-};
-
 const buildNotificationContainerForPostList = (watchedState, numberOfNewPosts) => {
   const container = document.createElement('div');
   container.classList.add(
@@ -536,7 +525,7 @@ const renderUpdates = (watchedState, updates) => {
   );
 };
 
-const renderRssContent = (watchedState, elements) => {
+const renderRssContent = (watchedState) => {
   if (watchedState.rssSources.length === 0) {
     renderStartPage();
     return;
@@ -654,7 +643,7 @@ export default (state, elements) => {
         renderValidationErrors(value, elements);
         break;
       case 'rssSources':
-        renderRssContent(watchedState, elements);
+        renderRssContent(watchedState);
         break;
       case 'updates':
         renderUpdates(watchedState, value);
