@@ -20,7 +20,11 @@ export default {
     },
     notificationForPostList: {
       beforeBadge: 'Показать',
-      afterBadge: 'новую запись',
+      afterBadge: {
+        after_0: 'новую запись',
+        after_1: 'новые записи',
+        after_2: 'новых записей',
+      },
     },
     post: {
       btn: 'Посмотреть',
@@ -40,12 +44,8 @@ export default {
         itsNotRss: 'Этот источник не содержит допустимого rss',
         required: 'Поле не может быть пустым',
         rssAlreadyExists: 'Введенный RSS-источник уже есть отслеживается',
-        isNotSupported: 'Этот ресурс не поддерживается',
       },
-      networkError: 'Ошибка сети. Попробуйте снова.',
-    },
-    toastError: {
-      title: 'Ошибка',
+      isNotSupported: 'Этот ресурс не поддерживается',
     },
   },
 };

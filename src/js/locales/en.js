@@ -20,7 +20,10 @@ export default {
     },
     notificationForPostList: {
       beforeBadge: 'Show',
-      afterBadge: 'new posts',
+      afterBadge: {
+        after: 'new post',
+        after_plural: 'new posts',
+      },
     },
     post: {
       btn: 'Preview',
@@ -40,12 +43,8 @@ export default {
         itsNotRss: "This source doesn't contain valid rss",
         required: 'Input is a required field',
         rssAlreadyExists: 'The entered RSS source is already exist',
-        isNotSupported: 'This resource is not supported',
       },
-    },
-    networkError: 'Network Problems. Try again',
-    toastError: {
-      title: 'Error',
+      isNotSupported: 'This resource is not supported',
     },
   },
 };

@@ -20,11 +20,16 @@ const getRssSourceData = (parsedRss, sourceLink) => {
   const description = parsedRss.querySelector('description').textContent;
   const id = _.uniqueId();
   const lastUpdate = new Date(parsedRss.querySelector('pubDate').textContent);
-  return { title, description, link: sourceLink, id, lastUpdate };
+  return {
+    title,
+    description,
+    link: sourceLink,
+    id,
+    lastUpdate,
+  };
 };
 
 const getRssPostsData = (parsedRss, sourceId) => {
-  console.log('parsedRFss', parsedRss);
   const items = parsedRss.querySelectorAll('item');
   const posts = [];
   items.forEach((item) => {
@@ -63,12 +68,12 @@ const checkUpdates = (watchedState) => {
       .then((response) => {
         const parsedRss = parseRssContent(response.data.contents, 'text/xml');
         const lastUpdate = new Date(
-          parsedRss.querySelector('pubDate').textContent
+          parsedRss.querySelector('pubDate').textContent,
         );
-        if (rssSource.lastUpdate.getTime() >= lastUpdate.getTime()) return;
+        if (rssSource.lastUpdate.getTime() >= lastUpdate.getTime()) return null;
         const posts = getRssPostsData(parsedRss, rssSource.id);
         const newPosts = posts.filter(
-          (post) => rssSource.lastUpdate.getTime() < post.pubDate.getTime()
+          (post) => (rssSource.lastUpdate.getTime() < post.pubDate.getTime()),
         );
         watchedState.posts.unshift(...newPosts);
         rssSource.lastUpdate = newPosts[0].pubDate;
@@ -80,7 +85,7 @@ const checkUpdates = (watchedState) => {
         }
         timeoutDelay = 5000;
       })
-      .catch((err) => {
+      .catch(() => {
         timeoutDelay *= 2;
       });
   });
@@ -105,8 +110,9 @@ const validateRssLink = (watchedState) => {
       .test(
         'The existing link',
         i18n.t('errors.formValidation.rssAlreadyExists'),
-        (enteredLink) =>
+        (enteredLink) => (
           !watchedState.rssLinks.includes(removeTrailingSlash(enteredLink))
+        ),
       ),
   });
 
@@ -160,7 +166,7 @@ export default async () => {
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
     const error = validateRssLink(watchedState);
-    watchedState.form.valid = !!!error;
+    watchedState.form.valid = !error;
     watchedState.form.error = error;
   });
 
@@ -174,14 +180,12 @@ export default async () => {
     axios
       .get(`${corsProxy}${encodeURIComponent(rssLink)}`)
       .then((response) => {
-        console.log('response', response.data.contents);
-        watchedState.form.fields.input = '';
-        watchedState.form.processState = 'filling';
         const parsedRss = parseRssContent(response.data.contents, 'text/xml');
+        watchedState.form.fields.input = '';
         if (!parsedRss) {
-          throw new Error(`error parse`);
+          throw new Error(i18n.t('errors.isNotSupported'));
         }
-
+        watchedState.form.processState = 'filling';
         const newSource = getRssSourceData(parsedRss, rssLink);
         if (!watchedState.activeSourceId) {
           watchedState.activeSourceId = newSource.id;
