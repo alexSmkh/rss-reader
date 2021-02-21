@@ -199,6 +199,12 @@ export default async () => {
         watchedState.rssLinks.push(rssLink);
       })
       .catch((err) => {
+        if (err.message === i18n.t('errors.isNotSupported')) {
+          watchedState.form.error = err.message;
+          watchedState.form.processState = 'failed';
+          watchedState.form.valid = false;
+          return;
+        }
         watchedState.form.processState = 'failed';
         watchedState.error = err;
       });
