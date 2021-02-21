@@ -3,28 +3,31 @@ import _ from 'lodash';
 import i18n from 'i18next';
 
 const changeLanguage = (language) => {
-  i18n.changeLanguage(language);
-  const btns = document.querySelectorAll('[name="change-language"]');
-  btns.forEach((btn) => btn.classList.toggle('active'));
+  i18n
+    .changeLanguage(language)
+    .then((t) => {
+    const btns = document.querySelectorAll('[name="change-language"]');
+    btns.forEach((btn) => btn.classList.toggle('active'));
 
-  const elementsForTranslate = document.querySelectorAll(
-    '[data-translation-key]'
-  );
-  elementsForTranslate.forEach((element) => {
-    const { translationKey } = element.dataset;
-    element.textContent = i18n.t(translationKey);
-  });
+    const elementsForTranslate = document.querySelectorAll(
+      '[data-translation-key]'
+    );
+    elementsForTranslate.forEach((element) => {
+      const { translationKey } = element.dataset;
+      element.textContent = t(translationKey);
+    });
 
-  const rssInput = document.getElementById('rss-input');
-  rssInput.setAttribute('placeholder', i18n.t('header.form.placeholder'));
+    const rssInput = document.getElementById('rss-input');
+    rssInput.setAttribute('placeholder', t('header.form.placeholder'));
 
-  const elementsForTranslatePlural = document.querySelectorAll(
-    '[data-translation-key-plural]'
-  );
-  elementsForTranslatePlural.forEach((element) => {
-    const translationKey = element.dataset.translationKeyPlural;
-    const count = parseInt(element.dataset.numberForTranslate, 10);
-    element.textContent = i18n.t(translationKey, { count });
+    const elementsForTranslatePlural = document.querySelectorAll(
+      '[data-translation-key-plural]'
+    );
+    elementsForTranslatePlural.forEach((element) => {
+      const translationKey = element.dataset.translationKeyPlural;
+      const count = parseInt(element.dataset.numberForTranslate, 10);
+      element.textContent = t(translationKey, { count });
+    });
   });
 };
 
@@ -305,9 +308,9 @@ const buildPostList = (watchedState) => {
   const posts = watchedState.posts.filter(
     (post) => watchedState.activeSourceId === post.sourceId
   );
-  posts.forEach((post) => (
+  posts.forEach((post) =>
     overflowContainer.appendChild(buildPostCard(watchedState, post))
-  ));
+  );
 
   postListContainer.appendChild(overflowContainer);
   return postListContainer;
@@ -499,9 +502,9 @@ const buildNotificationContainerForPostList = (
       (post) => watchedState.activeSourceId === post.sourceId
     );
     overflowContainer.innerHTML = '';
-    posts.forEach((post) => (
+    posts.forEach((post) =>
       overflowContainer.appendChild(buildPostCard(watchedState, post))
-    ));
+    );
     container.remove();
   });
 
@@ -513,7 +516,8 @@ const updateNotificationContainerForPostList = (
   numberOfLastUpdates
 ) => {
   const badge = notificationContainer.querySelector('.badge');
-  const numberOfNewPosts = parseInt(badge.textContent, 10) + numberOfLastUpdates;
+  const numberOfNewPosts =
+    parseInt(badge.textContent, 10) + numberOfLastUpdates;
   badge.textContent = numberOfNewPosts;
 
   const afterBadgeContent = badge.nextSibling;
