@@ -73,8 +73,8 @@ const showModalDialog = (post) => {
     hideModalDialog(modal, modalBackdrop);
   });
   const openBtn = document.querySelector('[data-open="modal"');
+  openBtn.setAttribute('href', post.link);
   openBtn.addEventListener('click', () => {
-    window.open(post.link, '_blank');
     hideModalDialog(modal, modalBackdrop);
   });
 
