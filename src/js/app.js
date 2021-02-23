@@ -9,10 +9,11 @@ import resources from './locales/index';
 const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url=';
 
 const removeTrailingSlash = (url) => {
-  if (url.endsWith('/')) {
-    return url.slice(0, -1).trim();
+  const trimmedUrl = url.trim();
+  if (trimmedUrl.endsWith('/')) {
+    return trimmedUrl.slice(0, -1);
   }
-  return url;
+  return trimmedUrl;
 };
 
 const getRssSourceData = (parsedRss, sourceLink) => {
