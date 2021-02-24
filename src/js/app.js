@@ -17,7 +17,7 @@ const checkUpdates = (watchedState) => {
       .then((response) => {
         const { posts: postsFromLastRequest } = parseRss(
           response.data.contents,
-          'text/xml'
+          'text/xml',
         );
 
         const oldPostLinks = watchedState.posts.reduce((acc, post) => {
@@ -29,8 +29,9 @@ const checkUpdates = (watchedState) => {
 
         const newPosts = postsFromLastRequest
           .filter(
-            (postFromLastRequest) =>
-              !oldPostLinks.includes(postFromLastRequest.link)
+            (postFromLastRequest) => !oldPostLinks.includes(
+              postFromLastRequest.link,
+            ),
           )
           .map((newPost) => ({
             ...newPost,
@@ -45,6 +46,7 @@ const checkUpdates = (watchedState) => {
           /* eslint-disable  no-param-reassign */
           watchedState.posts.unshift(...update.newPosts);
           watchedState.updates = update;
+          /* eslint-enable  no-param-reassign */
         }
         timeoutDelay = 5000;
       })
@@ -58,10 +60,10 @@ const checkUpdates = (watchedState) => {
 const setValidationLocale = () => {
   yup.setLocale({
     string: {
-      url: i18n.t('errors.formValidation.url'),
+      url: 'errors.formValidation.url',
     },
     mixed: {
-      required: i18n.t('errors.formValidation.required'),
+      required: 'errors.formValidation.required',
     },
   });
 };
@@ -74,7 +76,7 @@ const validateRssLink = (watchedState) => {
       .required()
       .notOneOf(
         watchedState.rssLinks,
-        i18n.t('errors.formValidation.rssAlreadyExists')
+        'errors.formValidation.rssAlreadyExists',
       ),
   });
 
@@ -149,7 +151,7 @@ export default async () => {
         const parsedRss = parseRss(response.data.contents, 'text/xml');
         watchedState.form.fields.input = '';
         if (!parsedRss) {
-          throw new Error(i18n.t('errors.isNotSupported'));
+          throw new Error('errors.isNotSupported');
         }
         watchedState.form.processState = 'filling';
         const newSource = {
@@ -178,7 +180,7 @@ export default async () => {
         watchedState.rssLinks.push(rssLink);
       })
       .catch((err) => {
-        if (err.message === i18n.t('errors.isNotSupported')) {
+        if (err.message === 'errors.isNotSupported') {
           watchedState.form.error = err.message;
           watchedState.form.processState = 'failed';
           watchedState.form.valid = false;
