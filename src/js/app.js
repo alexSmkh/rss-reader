@@ -88,12 +88,11 @@ const validateRssLink = (watchedState) => {
   }
 };
 
-export default async () => {
+export default () => {
   i18n.init({
     lng: 'en',
     resources,
-  });
-  setValidationLocale();
+  }).then(() => setValidationLocale());
 
   const state = {
     form: {
