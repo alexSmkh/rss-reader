@@ -5,6 +5,7 @@ import i18n from 'i18next';
 
 import initView from './view';
 import resources from './locales/index';
+import parseRss from './parser';
 
 const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url=';
 
@@ -14,52 +15,7 @@ const removeTrailingSlash = (url) => {
     return trimmedUrl.slice(0, -1);
   }
   return trimmedUrl;
-};
-
-const getRssSourceData = (parsedRss, sourceLink) => {
-  const title = parsedRss.querySelector('title').textContent;
-  const description = parsedRss.querySelector('description').textContent;
-  const id = _.uniqueId();
-  const lastUpdate = new Date(parsedRss.querySelector('pubDate').textContent);
-  return {
-    title,
-    description,
-    link: sourceLink,
-    id,
-    lastUpdate,
-  };
-};
-
-const getRssPostsData = (parsedRss, sourceId) => {
-  const items = parsedRss.querySelectorAll('item');
-  const posts = [];
-  items.forEach((item) => {
-    const title = item.querySelector('title').textContent;
-    const description = item.querySelector('description').textContent;
-    const link = item.querySelector('link').textContent;
-    const pubDate = new Date(item.querySelector('pubDate').textContent);
-    const id = _.uniqueId();
-    posts.push({
-      title,
-      description,
-      link,
-      pubDate,
-      sourceId,
-      id,
-      unread: true,
-    });
-  });
-  return posts;
-};
-
-const parseRssContent = (rssContent, mimeType) => {
-  const parser = new DOMParser();
-  const content = parser.parseFromString(rssContent, mimeType);
-  if (content.querySelector('parsererror')) {
-    return null;
-  }
-  return content;
-};
+}; 
 
 const checkUpdates = (watchedState) => {
   let timeoutDelay = 5000;
@@ -181,17 +137,17 @@ export default async () => {
     axios
       .get(`${corsProxy}${encodeURIComponent(rssLink)}`)
       .then((response) => {
-        const parsedRss = parseRssContent(response.data.contents, 'text/xml');
+        const parsedRss = parseRss(response.data.contents, 'text/xml');
         watchedState.form.fields.input = '';
         if (!parsedRss) {
           throw new Error(i18n.t('errors.isNotSupported'));
         }
         watchedState.form.processState = 'filling';
-        const newSource = getRssSourceData(parsedRss, rssLink);
+        const newSource = parsedRss.source;
         if (!watchedState.activeSourceId) {
           watchedState.activeSourceId = newSource.id;
         }
-        const postsOfNewSource = getRssPostsData(parsedRss, newSource.id);
+        const postsOfNewSource = parsedRss.postList;
         return { newSource, postsOfNewSource };
       })
       .then(({ newSource, postsOfNewSource }) => {
