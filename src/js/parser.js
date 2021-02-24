@@ -27,7 +27,7 @@ export default (rssContent, mimeType) => {
   const parser = new DOMParser();
   const content = parser.parseFromString(rssContent, mimeType);
   if (content.querySelector('parsererror')) {
-    return null;
+    throw new Error('parse error');
   }
   const source = getRssSourceData(content);
   const posts = getRssPostsData(content);

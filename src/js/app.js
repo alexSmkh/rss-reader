@@ -149,9 +149,9 @@ export default () => {
       .then((response) => {
         const parsedRss = parseRss(response.data.contents, 'text/xml');
         watchedState.form.fields.input = '';
-        if (!parsedRss) {
-          throw new Error('errors.isNotSupported');
-        }
+        // if (!parsedRss) {
+        //   throw new Error('errors.isNotSupported');
+        // }
         watchedState.form.processState = 'filling';
         const newSource = {
           ...parsedRss.source,
@@ -179,8 +179,8 @@ export default () => {
         watchedState.rssLinks.push(rssLink);
       })
       .catch((err) => {
-        if (err.message === 'errors.isNotSupported') {
-          watchedState.form.error = err.message;
+        if (err.message === 'parse error') {
+          watchedState.form.error = 'errors.isNotSupported';
           watchedState.form.processState = 'failed';
           watchedState.form.valid = false;
           return;
