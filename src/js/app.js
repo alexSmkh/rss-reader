@@ -17,7 +17,7 @@ const checkUpdates = (watchedState) => {
       .then((response) => {
         const { posts: postsFromLastRequest } = parseRss(
           response.data.contents,
-          'text/xml',
+          'text/xml'
         );
 
         const oldPostLinks = watchedState.posts.reduce((acc, post) => {
@@ -28,17 +28,16 @@ const checkUpdates = (watchedState) => {
         }, []);
 
         const newPosts = postsFromLastRequest
-          .filter((postFromLastRequest) => (
-            !oldPostLinks.includes(postFromLastRequest.link)
-          ))
-          .map((newPost) => (
-            {
-              ...newPost,
-              id: _.uniqueId(),
-              sourceId: rssSource.id,
-              unread: true,
-            }
-          ));
+          .filter(
+            (postFromLastRequest) =>
+              !oldPostLinks.includes(postFromLastRequest.link)
+          )
+          .map((newPost) => ({
+            ...newPost,
+            id: _.uniqueId(),
+            sourceId: rssSource.id,
+            unread: true,
+          }));
         return { rssSourceId: rssSource.id, newPosts };
       })
       .then((update) => {
@@ -56,7 +55,7 @@ const checkUpdates = (watchedState) => {
   setTimeout(() => checkUpdates(watchedState), timeoutDelay);
 };
 
-const validateRssLink = (watchedState) => {
+const buildValidateSchema = (watchedState) => {
   yup.setLocale({
     string: {
       url: i18n.t('errors.formValidation.url'),
@@ -74,14 +73,17 @@ const validateRssLink = (watchedState) => {
       .test(
         'The existing link',
         i18n.t('errors.formValidation.rssAlreadyExists'),
-        (enteredLink) => !watchedState.rssLinks.includes(
-          removeTrailingSlash(enteredLink),
-        ),
+        (enteredLink) =>
+          !watchedState.rssLinks.includes(removeTrailingSlash(enteredLink))
       ),
   });
 
+  return schema;
+};
+
+const validateRssLink = (watchedState, schema) => {
   try {
-    schema.validateSync(watchedState.form.fields, { abortEarly: false });
+    schema.validateSync(watchedState.form.fields);
     return null;
   } catch (e) {
     return e.errors[0];
@@ -117,6 +119,7 @@ export default async () => {
   const elements = { submit, input, form };
   const watchedState = initView(state, elements);
   const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+  const validateSchema = buildValidateSchema(watchedState);
 
   changeLangBtns.forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -130,7 +133,7 @@ export default async () => {
     e.preventDefault();
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
-    const error = validateRssLink(watchedState);
+    const error = validateRssLink(watchedState, validateSchema);
     watchedState.form.valid = !error;
     watchedState.form.error = error;
   });
