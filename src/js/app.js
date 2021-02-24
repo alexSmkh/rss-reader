@@ -55,7 +55,7 @@ const checkUpdates = (watchedState) => {
   setTimeout(() => checkUpdates(watchedState), timeoutDelay);
 };
 
-const buildValidateSchema = (watchedState) => {
+const setValidationLocale = () => {
   yup.setLocale({
     string: {
       url: i18n.t('errors.formValidation.url'),
@@ -64,24 +64,20 @@ const buildValidateSchema = (watchedState) => {
       required: i18n.t('errors.formValidation.required'),
     },
   });
+};
 
+const validateRssLink = (watchedState) => {
   const schema = yup.object().shape({
     input: yup
       .string()
       .url()
       .required()
-      .test(
-        'The existing link',
-        i18n.t('errors.formValidation.rssAlreadyExists'),
-        (enteredLink) =>
-          !watchedState.rssLinks.includes(removeTrailingSlash(enteredLink))
+      .notOneOf(
+        watchedState.rssLinks,
+        i18n.t('errors.formValidation.rssAlreadyExists')
       ),
   });
 
-  return schema;
-};
-
-const validateRssLink = (watchedState, schema) => {
   try {
     schema.validateSync(watchedState.form.fields);
     return null;
@@ -95,6 +91,8 @@ export default async () => {
     lng: 'en',
     resources,
   });
+  setValidationLocale();
+
   const state = {
     form: {
       valid: true,
@@ -119,7 +117,6 @@ export default async () => {
   const elements = { submit, input, form };
   const watchedState = initView(state, elements);
   const changeLangBtns = document.querySelectorAll('[name="change-language"]');
-  const validateSchema = buildValidateSchema(watchedState);
 
   changeLangBtns.forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -133,7 +130,7 @@ export default async () => {
     e.preventDefault();
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
-    const error = validateRssLink(watchedState, validateSchema);
+    const error = validateRssLink(watchedState);
     watchedState.form.valid = !error;
     watchedState.form.error = error;
   });
