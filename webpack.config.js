@@ -3,7 +3,6 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
-console.log('dirname', __dirname);
 module.exports = {
   mode: process.env.NODE_ENV || 'development',
   entry: {
