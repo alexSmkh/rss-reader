@@ -6,24 +6,23 @@ import i18n from 'i18next';
 import initView from './view';
 import resources from './locales/index';
 import parseRss from './parser';
-import { removeTrailingSlash } from 'utils';
-
-const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url='; 
+import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils';
 
 const checkUpdates = (watchedState) => {
   let timeoutDelay = 5000;
   watchedState.rssSources.forEach(async (rssSource) => {
+    const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
     axios
-      .get(`${corsProxy}${encodeURIComponent(rssSource.link)}`)
+      .get(proxyUrl)
       .then((response) => {
         const parsedRss = parseRssContent(response.data.contents, 'text/xml');
         const lastUpdate = new Date(
-          parsedRss.querySelector('pubDate').textContent,
+          parsedRss.querySelector('pubDate').textContent
         );
         if (rssSource.lastUpdate.getTime() >= lastUpdate.getTime()) return null;
         const posts = getRssPostsData(parsedRss, rssSource.id);
         const newPosts = posts.filter(
-          (post) => (rssSource.lastUpdate.getTime() < post.pubDate.getTime()),
+          (post) => rssSource.lastUpdate.getTime() < post.pubDate.getTime()
         );
         watchedState.posts.unshift(...newPosts);
         rssSource.lastUpdate = newPosts[0].pubDate;
@@ -126,9 +125,10 @@ export default async () => {
 
     const data = new FormData(e.target);
     const rssLink = removeTrailingSlash(data.get('rss-link'));
+    const proxyUrl = wrapUrlInCorsProxy(rssLink);
 
     axios
-      .get(`${corsProxy}${encodeURIComponent(rssLink)}`)
+      .get(proxyUrl)
       .then((response) => {
         const parsedRss = parseRss(response.data.contents, 'text/xml');
         watchedState.form.fields.input = '';
