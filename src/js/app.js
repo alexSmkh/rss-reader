@@ -10,26 +10,41 @@ import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils';
 
 const checkUpdates = (watchedState) => {
   let timeoutDelay = 5000;
-  watchedState.rssSources.forEach(async (rssSource) => {
+  watchedState.rssSources.forEach((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
     axios
       .get(proxyUrl)
       .then((response) => {
-        const parsedRss = parseRssContent(response.data.contents, 'text/xml');
-        const lastUpdate = new Date(
-          parsedRss.querySelector('pubDate').textContent
+        const { posts: postsFromLastRequest } = parseRss(
+          response.data.contents,
+          'text/xml',
         );
-        if (rssSource.lastUpdate.getTime() >= lastUpdate.getTime()) return null;
-        const posts = getRssPostsData(parsedRss, rssSource.id);
-        const newPosts = posts.filter(
-          (post) => rssSource.lastUpdate.getTime() < post.pubDate.getTime()
-        );
-        watchedState.posts.unshift(...newPosts);
-        rssSource.lastUpdate = newPosts[0].pubDate;
+
+        const oldPostLinks = watchedState.posts.reduce((acc, post) => {
+          if (post.sourceId === rssSource.id) {
+            return [...acc, post.link];
+          }
+          return acc;
+        }, []);
+
+        const newPosts = postsFromLastRequest
+          .filter((postFromLastRequest) => (
+            !oldPostLinks.includes(postFromLastRequest.link)
+          ))
+          .map((newPost) => (
+            {
+              ...newPost,
+              id: _.uniqueId(),
+              sourceId: rssSource.id,
+              unread: true,
+            }
+          ));
         return { rssSourceId: rssSource.id, newPosts };
       })
       .then((update) => {
-        if (update) {
+        if (update.newPosts.length > 0) {
+          /* eslint-disable  no-param-reassign */
+          watchedState.posts.unshift(...update.newPosts);
           watchedState.updates = update;
         }
         timeoutDelay = 5000;
@@ -59,8 +74,8 @@ const validateRssLink = (watchedState) => {
       .test(
         'The existing link',
         i18n.t('errors.formValidation.rssAlreadyExists'),
-        (enteredLink) => (
-          !watchedState.rssLinks.includes(removeTrailingSlash(enteredLink))
+        (enteredLink) => !watchedState.rssLinks.includes(
+          removeTrailingSlash(enteredLink),
         ),
       ),
   });
@@ -91,6 +106,7 @@ export default async () => {
     rssSources: [],
     activeSourceId: null,
     posts: [],
+    unreadPostIDs: [],
     updates: [],
     language: 'en',
   };
@@ -136,11 +152,24 @@ export default async () => {
           throw new Error(i18n.t('errors.isNotSupported'));
         }
         watchedState.form.processState = 'filling';
-        const newSource = parsedRss.source;
+        const newSource = {
+          ...parsedRss.source,
+          id: _.uniqueId(),
+          link: rssLink,
+        };
         if (!watchedState.activeSourceId) {
           watchedState.activeSourceId = newSource.id;
         }
-        const postsOfNewSource = parsedRss.postList;
+        const postsOfNewSource = parsedRss.posts.map((post) => {
+          const id = _.uniqueId();
+          return {
+            ...post,
+            sourceId: newSource.id,
+            id,
+            unread: true,
+          };
+        });
+
         return { newSource, postsOfNewSource };
       })
       .then(({ newSource, postsOfNewSource }) => {
