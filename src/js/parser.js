@@ -5,12 +5,10 @@ const getRssPostsData = (parsedRss) => {
     const title = item.querySelector('title').textContent;
     const description = item.querySelector('description').textContent;
     const link = item.querySelector('link').textContent;
-    const pubDate = new Date(item.querySelector('pubDate').textContent);
     posts.push({
       title,
       description,
       link,
-      pubDate,
     });
   });
   return posts;
