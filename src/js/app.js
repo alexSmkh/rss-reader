@@ -6,16 +6,9 @@ import i18n from 'i18next';
 import initView from './view';
 import resources from './locales/index';
 import parseRss from './parser';
+import { removeTrailingSlash } from 'utils';
 
-const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url=';
-
-const removeTrailingSlash = (url) => {
-  const trimmedUrl = url.trim();
-  if (trimmedUrl.endsWith('/')) {
-    return trimmedUrl.slice(0, -1);
-  }
-  return trimmedUrl;
-}; 
+const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url='; 
 
 const checkUpdates = (watchedState) => {
   let timeoutDelay = 5000;
