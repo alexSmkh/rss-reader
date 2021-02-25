@@ -19,23 +19,16 @@ const checkUpdates = (watchedState) => {
           response.data.contents,
           'text/xml',
         );
-
-        const oldPostLinks = watchedState.posts.reduce((acc, post) => {
-          if (post.sourceId === rssSource.id) {
-            return [...acc, post.link];
-          }
-          return acc;
-        }, []);
-
-        const newPosts = postsFromLastRequest
-          .filter(
-            (postFromLastRequest) => !oldPostLinks.includes(postFromLastRequest.link),
-          )
-          .map((newPost) => ({
-            ...newPost,
-            id: _.uniqueId(),
-            sourceId: rssSource.id,
-          }));
+        const newPostsFromLastRequest = _.differenceBy(
+          postsFromLastRequest,
+          watchedState.posts,
+          'link',
+        );
+        const newPosts = newPostsFromLastRequest.map((post) => ({
+          ...post,
+          id: _.uniqueId(),
+          sourceId: rssSource.id,
+        }));
         return { rssSourceId: rssSource.id, newPosts };
       })
       .then((update) => {
@@ -46,7 +39,7 @@ const checkUpdates = (watchedState) => {
           /* eslint-enable  no-param-reassign */
         }
       })
-      .catch(() => {});
+      .catch();
   });
   setTimeout(() => checkUpdates(watchedState), timeoutDelay);
 };
