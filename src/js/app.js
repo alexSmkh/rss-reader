@@ -3,10 +3,10 @@ import axios from 'axios';
 import _ from 'lodash';
 import i18n from 'i18next';
 
-import initView from './view';
-import resources from './locales/index';
-import parseRss from './parser';
-import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils';
+import initView from './view.js';
+import resources from './locales/index.js';
+import parseRss from './parser.js';
+import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils.js';
 
 const checkUpdates = (watchedState) => {
   const timeoutDelay = 5000;
