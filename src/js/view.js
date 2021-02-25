@@ -101,30 +101,24 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
 
   removeIcon.addEventListener('click', (e) => {
     e.stopPropagation();
-    const updatedRssSources = watchedState.rssSources.reduce(
-      (acc, rssSource) => {
-        if (rssSource.id !== rssSourceOfTargetElement.id) {
-          const rssCopy = _.clone(rssSource);
-          rssCopy.lastUpdate = new Date(rssSource.lastUpdate.getTime());
-          /* eslint-disable  no-param-reassign */
-          acc = [...acc, rssCopy];
-          /* eslint-enable  no-param-reassign */
-        }
-        return acc;
-      },
-      [],
-    );
-
-    const updatedPosts = watchedState.posts.reduce((acc, post) => {
-      if (post.sourceId !== rssSourceOfTargetElement.id) {
-        /* eslint-disable  no-param-reassign */
-        acc = [...acc, _.cloneDeep(post)];
-        /* eslint-enable  no-param-reassign */
-      }
-      return acc;
-    }, []);
 
     /* eslint-disable  no-param-reassign */
+    const postsIDsOfRssSourceTarget = watchedState.posts
+      .filter((post) => post.sourceId === rssSourceOfTargetElement.id)
+      .map((post) => post.id);
+    const readPostIDs = _.clone(watchedState.readPostIDs);
+    watchedState.readPostIDs = _.difference(
+      readPostIDs,
+      postsIDsOfRssSourceTarget,
+    );
+
+    const updatedRssSources = watchedState.rssSources.filter(
+      (rssSource) => rssSource.id !== rssSourceOfTargetElement.id,
+    );
+
+    const updatedPosts = watchedState.posts.filter(
+      (post) => post.sourceId !== rssSourceOfTargetElement.id,
+    );
     watchedState.posts = updatedPosts;
 
     if (updatedRssSources.length === 0) {
