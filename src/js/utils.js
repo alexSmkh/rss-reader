@@ -1,5 +1,3 @@
-const corsProxy = 'https://hexlet-allorigins.herokuapp.com/get?url=';
-
 export const removeTrailingSlash = (url) => {
   const trimmedUrl = url.trim();
   if (trimmedUrl.endsWith('/')) {
@@ -8,6 +6,9 @@ export const removeTrailingSlash = (url) => {
   return trimmedUrl;
 };
 
-export const wrapUrlInCorsProxy = (url) => (
-  `${corsProxy}${encodeURIComponent(url)}`
-);
+export const wrapUrlInCorsProxy = (rawURL) => {
+  const corsProxyURL = new URL('https://hexlet-allorigins.herokuapp.com/get');
+  corsProxyURL.searchParams.append('url', rawURL);
+  corsProxyURL.searchParams.append('disableCache', 'true');
+  return corsProxyURL;
+};

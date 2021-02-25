@@ -9,7 +9,7 @@ import parseRss from './parser';
 import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils';
 
 const checkUpdates = (watchedState) => {
-  let timeoutDelay = 5000;
+  const timeoutDelay = 5000;
   watchedState.rssSources.forEach((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
     axios
@@ -19,26 +19,16 @@ const checkUpdates = (watchedState) => {
           response.data.contents,
           'text/xml',
         );
-
-        const oldPostLinks = watchedState.posts.reduce((acc, post) => {
-          if (post.sourceId === rssSource.id) {
-            return [...acc, post.link];
-          }
-          return acc;
-        }, []);
-
-        const newPosts = postsFromLastRequest
-          .filter(
-            (postFromLastRequest) => !oldPostLinks.includes(
-              postFromLastRequest.link,
-            ),
-          )
-          .map((newPost) => ({
-            ...newPost,
-            id: _.uniqueId(),
-            sourceId: rssSource.id,
-            unread: true,
-          }));
+        const newPostsFromLastRequest = _.differenceBy(
+          postsFromLastRequest,
+          watchedState.posts,
+          'link',
+        );
+        const newPosts = newPostsFromLastRequest.map((post) => ({
+          ...post,
+          id: _.uniqueId(),
+          sourceId: rssSource.id,
+        }));
         return { rssSourceId: rssSource.id, newPosts };
       })
       .then((update) => {
@@ -48,11 +38,8 @@ const checkUpdates = (watchedState) => {
           watchedState.updates = update;
           /* eslint-enable  no-param-reassign */
         }
-        timeoutDelay = 5000;
       })
-      .catch(() => {
-        timeoutDelay *= 2;
-      });
+      .catch();
   });
   setTimeout(() => checkUpdates(watchedState), timeoutDelay);
 };
@@ -69,13 +56,14 @@ const setValidationLocale = () => {
 };
 
 const validateRssLink = (watchedState) => {
+  const existingRssLinks = watchedState.rssSources.map((rssSource) => rssSource.link);
   const schema = yup.object().shape({
     input: yup
       .string()
       .url()
       .required()
       .notOneOf(
-        watchedState.rssLinks,
+        existingRssLinks,
         'errors.formValidation.rssAlreadyExists',
       ),
   });
@@ -89,106 +77,105 @@ const validateRssLink = (watchedState) => {
 };
 
 export default () => {
-  i18n.init({
-    lng: 'en',
-    resources,
-  }).then(() => setValidationLocale());
+  i18n
+    .init({
+      lng: 'en',
+      resources,
+    })
+    .then(() => {
+      setValidationLocale();
 
-  const state = {
-    form: {
-      valid: true,
-      processState: 'filling',
-      fields: {
-        input: '',
-      },
-      error: null,
-    },
-    rssLinks: [],
-    rssSources: [],
-    activeSourceId: null,
-    posts: [],
-    unreadPostIDs: [],
-    updates: [],
-    language: 'en',
-  };
+      const state = {
+        form: {
+          valid: true,
+          processState: 'filling',
+          fields: {
+            input: '',
+          },
+          error: null,
+        },
+        rssSources: [],
+        activeSourceId: null,
+        posts: [],
+        readPostIDs: [],
+        updates: [],
+        language: 'en',
+      };
 
-  const submit = document.getElementById('add-content-btn');
-  const input = document.getElementById('rss-input');
-  const form = document.getElementById('rss-form');
-  const elements = { submit, input, form };
-  const watchedState = initView(state, elements);
-  const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+      const submit = document.getElementById('add-content-btn');
+      const input = document.getElementById('rss-input');
+      const form = document.getElementById('rss-form');
+      const elements = { submit, input, form };
+      const watchedState = initView(state, elements);
+      const changeLangBtns = document.querySelectorAll(
+        '[name="change-language"]',
+      );
 
-  changeLangBtns.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const lang = e.target.getAttribute('data-lang');
-      if (lang === watchedState.language) return;
-      watchedState.language = lang;
-    });
-  });
-
-  input.addEventListener('input', (e) => {
-    e.preventDefault();
-    const rssLink = e.target.value;
-    watchedState.form.fields.input = rssLink;
-    const error = validateRssLink(watchedState);
-    watchedState.form.valid = !error;
-    watchedState.form.error = error;
-  });
-
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    watchedState.form.processState = 'sending';
-
-    const data = new FormData(e.target);
-    const rssLink = removeTrailingSlash(data.get('rss-link'));
-    const proxyUrl = wrapUrlInCorsProxy(rssLink);
-
-    axios
-      .get(proxyUrl)
-      .then((response) => {
-        const parsedRss = parseRss(response.data.contents, 'text/xml');
-        watchedState.form.fields.input = '';
-        if (!parsedRss) {
-          throw new Error('errors.isNotSupported');
-        }
-        watchedState.form.processState = 'filling';
-        const newSource = {
-          ...parsedRss.source,
-          id: _.uniqueId(),
-          link: rssLink,
-        };
-        if (!watchedState.activeSourceId) {
-          watchedState.activeSourceId = newSource.id;
-        }
-        const postsOfNewSource = parsedRss.posts.map((post) => {
-          const id = _.uniqueId();
-          return {
-            ...post,
-            sourceId: newSource.id,
-            id,
-            unread: true,
-          };
+      changeLangBtns.forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          const lang = e.target.getAttribute('data-lang');
+          if (lang === watchedState.language) return;
+          watchedState.language = lang;
         });
-
-        return { newSource, postsOfNewSource };
-      })
-      .then(({ newSource, postsOfNewSource }) => {
-        watchedState.posts.push(...postsOfNewSource);
-        watchedState.rssSources.push(newSource);
-        watchedState.rssLinks.push(rssLink);
-      })
-      .catch((err) => {
-        if (err.message === 'errors.isNotSupported') {
-          watchedState.form.error = err.message;
-          watchedState.form.processState = 'failed';
-          watchedState.form.valid = false;
-          return;
-        }
-        watchedState.form.processState = 'failed';
-        watchedState.error = err;
       });
-  });
 
-  checkUpdates(watchedState);
+      input.addEventListener('input', (e) => {
+        e.preventDefault();
+        const rssLink = e.target.value;
+        watchedState.form.fields.input = rssLink;
+        const error = validateRssLink(watchedState);
+        watchedState.form.valid = !error;
+        watchedState.form.error = error;
+      });
+
+      form.addEventListener('submit', (e) => {
+        e.preventDefault();
+        watchedState.form.processState = 'sending';
+
+        const data = new FormData(e.target);
+        const rssLink = removeTrailingSlash(data.get('rss-link'));
+        const proxyUrl = wrapUrlInCorsProxy(rssLink);
+        axios
+          .get(proxyUrl)
+          .then((response) => {
+            const parsedRss = parseRss(response.data.contents, 'text/xml');
+            watchedState.form.fields.input = '';
+            watchedState.form.processState = 'filling';
+            const newSource = {
+              ...parsedRss.source,
+              id: _.uniqueId(),
+              link: rssLink,
+            };
+            if (!watchedState.activeSourceId) {
+              watchedState.activeSourceId = newSource.id;
+            }
+            const postsOfNewSource = parsedRss.posts.map((post) => {
+              const id = _.uniqueId();
+              return {
+                ...post,
+                sourceId: newSource.id,
+                id,
+              };
+            });
+
+            return { newSource, postsOfNewSource };
+          })
+          .then(({ newSource, postsOfNewSource }) => {
+            watchedState.posts.push(...postsOfNewSource);
+            watchedState.rssSources.push(newSource);
+          })
+          .catch((err) => {
+            if (err.message === 'parse error') {
+              watchedState.form.error = 'errors.isNotSupported';
+              watchedState.form.processState = 'failed';
+              watchedState.form.valid = false;
+              return;
+            }
+            watchedState.form.processState = 'failed';
+            watchedState.error = err;
+          });
+      });
+
+      checkUpdates(watchedState);
+    });
 };
