@@ -143,15 +143,11 @@ export default () => {
     const data = new FormData(e.target);
     const rssLink = removeTrailingSlash(data.get('rss-link'));
     const proxyUrl = wrapUrlInCorsProxy(rssLink);
-
     axios
       .get(proxyUrl)
       .then((response) => {
         const parsedRss = parseRss(response.data.contents, 'text/xml');
         watchedState.form.fields.input = '';
-        // if (!parsedRss) {
-        //   throw new Error('errors.isNotSupported');
-        // }
         watchedState.form.processState = 'filling';
         const newSource = {
           ...parsedRss.source,
