@@ -74,7 +74,7 @@ const showModalDialog = (post) => {
   headerCloseBtn.addEventListener('click', () => hideModalDialog(modal));
 
   const modalBodyContent = document.querySelector('.modal-body > p');
-  modalBodyContent.innerHTML = post.description;
+  modalBodyContent.textContent = post.description;
 
   const closeBtn = document.getElementById('modal-close-btn');
   closeBtn.addEventListener('click', () => {
@@ -231,7 +231,7 @@ const buildPostCard = (watchedState, post) => {
 
   const postDescription = document.createElement('p');
   postDescription.classList.add('card-text');
-  postDescription.innerHTML = `${post.description.slice(0, 100)} ...`;
+  postDescription.textContent = `${post.description.slice(0, 100)} ...`;
 
   const elementWrapper = document.createElement('div');
   elementWrapper.classList.add('wrapper');
