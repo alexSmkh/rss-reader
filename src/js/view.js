@@ -49,9 +49,8 @@ const hideBtnSpinner = (btn) => {
 };
 
 const getNumberOfUnreadPosts = (watchedState, rssSourceId) => {
-  const unreadPosts = watchedState.posts
-    .filter((post) => post.sourceId === rssSourceId)
-    .filter((post) => !watchedState.readPostIDs.includes(post.id));
+  const posts = watchedState.posts.filter((post) => post.sourceId === rssSourceId);
+  const unreadPosts = _.difference(posts, watchedState.readPostIDs);
   return unreadPosts.length;
 };
 
