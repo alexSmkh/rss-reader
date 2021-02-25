@@ -48,10 +48,11 @@ const hideBtnSpinner = (btn) => {
   /* eslint-enable  no-param-reassign */
 };
 
-const getNumberOfUnreadPosts = (rssSourceId, allPosts) => {
-  const currentPosts = allPosts.filter((post) => post.sourceId === rssSourceId);
-  const counts = _.countBy(currentPosts, ({ unread }) => unread);
-  return counts.true;
+const getNumberOfUnreadPosts = (watchedState, rssSourceId) => {
+  const unreadPosts = watchedState.posts
+    .filter((post) => post.sourceId === rssSourceId)
+    .filter((post) => !watchedState.readPostIDs.includes(post.id));
+  return unreadPosts.length;
 };
 
 const hideModalDialog = (modal, modalBackdrop) => {
@@ -152,17 +153,6 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
   });
 
   return removeIcon;
-};
-
-const updateUnreadPosts = (watchedState, post) => {
-  /* eslint-disable  no-param-reassign */
-  const updatedPosts = watchedState.posts.map((item) => {
-    if (item.id !== post.id) return item;
-    item.unread = false;
-    return item;
-  });
-  watchedState.posts = updatedPosts;
-  /* eslint-enable  no-param-reassign */
 };
 
 const markPostAsRead = (post, markAsReadLink, cardHeader, postTitle) => {
@@ -272,7 +262,7 @@ const buildPostCard = (watchedState, post) => {
   });
 
   let markAsReadLink;
-  if (post.unread) {
+  if (!watchedState.readPostIDs.includes(post.id)) {
     postTitle.classList.replace('font-weight-normal', 'font-weight-bold');
     const badge = buildNotificationBadge();
     cardHeader.appendChild(badge);
@@ -285,7 +275,7 @@ const buildPostCard = (watchedState, post) => {
     markAsReadLink.classList.add('text-muted', 'ml-2');
     markAsReadLink.addEventListener('click', (e) => {
       e.preventDefault();
-      updateUnreadPosts(watchedState, post);
+      watchedState.readPostIDs.push(post.id);
       markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
     });
     elementWrapper.appendChild(markAsReadLink);
@@ -293,8 +283,8 @@ const buildPostCard = (watchedState, post) => {
 
   previewBtn.addEventListener('click', () => {
     showModalDialog(post);
-    if (post.unread) {
-      updateUnreadPosts(watchedState, post);
+    if (!watchedState.readPostIDs.includes(post.id)) {
+      watchedState.readPostIDs.push(post.id);
       markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
     }
   });
@@ -357,8 +347,8 @@ const buildRssSourceCard = (watchedState, rssSource) => {
   );
 
   const nubmerOfUnreadPosts = getNumberOfUnreadPosts(
+    watchedState,
     rssSource.id,
-    watchedState.posts,
   );
 
   if (nubmerOfUnreadPosts) {
@@ -543,14 +533,14 @@ const updateNotificationContainerForPostList = (
   afterBadgeContent.setAttribute('data-number-for-translate', numberOfNewPosts);
 };
 
-const renderNotificationBadgeForRssList = (rssSourceId, numberOfNewPosts) => {
+const renderNotificationBadgeForRssList = (watchedState, rssSourceId, numberOfNewPosts) => {
   const rssSourceList = document.querySelector('[name="rss-source-list"]');
   const rssDOMElement = rssSourceList.querySelector(
     `[data-source-id="${rssSourceId}"]`,
   );
   let notificationBadge = rssDOMElement.querySelector('span.badge');
   if (!notificationBadge) {
-    const numberOfUnreadPosts = getNumberOfUnreadPosts(rssSourceId);
+    const numberOfUnreadPosts = getNumberOfUnreadPosts(watchedState, rssSourceId);
     notificationBadge = buildNotificationBadge(numberOfUnreadPosts);
     const badgeWrapper = rssDOMElement.querySelector('.notificatonWrapper');
     badgeWrapper.prepend(notificationBadge);
@@ -588,7 +578,7 @@ const renderNotificationContainerForPostList = (
 const renderUpdates = (watchedState, updates) => {
   const { rssSourceId, newPosts } = updates;
   const numberOfNewPosts = newPosts.length;
-  renderNotificationBadgeForRssList(rssSourceId, numberOfNewPosts);
+  renderNotificationBadgeForRssList(watchedState, rssSourceId, numberOfNewPosts);
   renderNotificationContainerForPostList(
     watchedState,
     rssSourceId,

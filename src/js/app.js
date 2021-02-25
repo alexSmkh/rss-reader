@@ -35,7 +35,6 @@ const checkUpdates = (watchedState) => {
             ...newPost,
             id: _.uniqueId(),
             sourceId: rssSource.id,
-            unread: true,
           }));
         return { rssSourceId: rssSource.id, newPosts };
       })
@@ -105,7 +104,7 @@ export default () => {
         rssSources: [],
         activeSourceId: null,
         posts: [],
-        unreadPostIDs: [],
+        readPostIDs: [],
         updates: [],
         language: 'en',
       };
@@ -163,7 +162,6 @@ export default () => {
                 ...post,
                 sourceId: newSource.id,
                 id,
-                unread: true,
               };
             });
 
