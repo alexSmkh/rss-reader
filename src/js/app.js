@@ -9,7 +9,7 @@ import parseRss from './parser';
 import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils';
 
 const checkUpdates = (watchedState) => {
-  let timeoutDelay = 5000;
+  const timeoutDelay = 5000;
   watchedState.rssSources.forEach((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
     axios
@@ -46,11 +46,8 @@ const checkUpdates = (watchedState) => {
           watchedState.updates = update;
           /* eslint-enable  no-param-reassign */
         }
-        timeoutDelay = 5000;
       })
-      .catch(() => {
-        timeoutDelay *= 2;
-      });
+      .catch(() => {});
   });
   setTimeout(() => checkUpdates(watchedState), timeoutDelay);
 };
@@ -67,13 +64,14 @@ const setValidationLocale = () => {
 };
 
 const validateRssLink = (watchedState) => {
+  const existingRssLinks = watchedState.rssSources.map((rssSource) => rssSource.link);
   const schema = yup.object().shape({
     input: yup
       .string()
       .url()
       .required()
       .notOneOf(
-        watchedState.rssLinks,
+        existingRssLinks,
         'errors.formValidation.rssAlreadyExists',
       ),
   });
@@ -104,7 +102,6 @@ export default () => {
           },
           error: null,
         },
-        rssLinks: [],
         rssSources: [],
         activeSourceId: null,
         posts: [],
@@ -175,7 +172,6 @@ export default () => {
           .then(({ newSource, postsOfNewSource }) => {
             watchedState.posts.push(...postsOfNewSource);
             watchedState.rssSources.push(newSource);
-            watchedState.rssLinks.push(rssLink);
           })
           .catch((err) => {
             if (err.message === 'parse error') {

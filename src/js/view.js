@@ -126,9 +126,6 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
 
     /* eslint-disable  no-param-reassign */
     watchedState.posts = updatedPosts;
-    watchedState.rssLinks = watchedState.rssLinks.filter(
-      (link) => link !== rssSourceOfTargetElement.link,
-    );
 
     if (updatedRssSources.length === 0) {
       watchedState.activeSourceId = null;
