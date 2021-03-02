@@ -1,4 +1,4 @@
-export const removeTrailingSlash = (url) => {
+export const normalizeURL = (url) => {
   const trimmedUrl = url.trim();
   if (trimmedUrl.endsWith('/')) {
     return trimmedUrl.slice(0, -1);

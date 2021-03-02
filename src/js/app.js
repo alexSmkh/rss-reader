@@ -6,7 +6,7 @@ import i18n from 'i18next';
 import initView from './view.js';
 import resources from './locales/index.js';
 import parseRss from './parser.js';
-import { removeTrailingSlash, wrapUrlInCorsProxy } from './utils.js';
+import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
 
 const checkUpdates = (watchedState) => {
   const timeoutDelay = 5000;
@@ -133,7 +133,7 @@ export default () => {
         watchedState.form.processState = 'sending';
 
         const data = new FormData(e.target);
-        const rssLink = removeTrailingSlash(data.get('rss-link'));
+        const rssLink = normalizeURL(data.get('rss-link'));
         const proxyUrl = wrapUrlInCorsProxy(rssLink);
         axios
           .get(proxyUrl)
