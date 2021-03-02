@@ -87,7 +87,7 @@ export default () => {
 
       const state = {
         form: {
-          valid: true,
+          valid: false,
           processState: 'filling',
           fields: {
             input: '',
