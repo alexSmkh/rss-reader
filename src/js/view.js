@@ -123,6 +123,7 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
 
     if (updatedRssSources.length === 0) {
       watchedState.activeSourceId = null;
+      watchedState.checkingUpdates = false;
       watchedState.rssSources = updatedRssSources;
       return;
     }

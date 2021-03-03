@@ -9,39 +9,45 @@ import parseRss from './parser.js';
 import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
 
 const checkUpdates = (watchedState) => {
+  if (!watchedState.checkingUpdates) {
+    watchedState.checkingUpdates = false;
+    return;
+  }
+  console.log('update')
   const timeoutDelay = 5000;
-  watchedState.rssSources.forEach((rssSource) => {
+  const updatePromises = watchedState.rssSources.map((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
-    axios
-      .get(proxyUrl)
-      .then((response) => {
-        const { posts: postsFromLastRequest } = parseRss(
-          response.data.contents,
-          'text/xml',
-        );
-        const newPostsFromLastRequest = _.differenceBy(
-          postsFromLastRequest,
-          watchedState.posts,
-          'link',
-        );
-        const newPosts = newPostsFromLastRequest.map((post) => ({
-          ...post,
-          id: _.uniqueId(),
-          sourceId: rssSource.id,
-        }));
-        return { rssSourceId: rssSource.id, newPosts };
-      })
-      .then((update) => {
+    return axios.get(proxyUrl).then((response) => {
+      const { posts: postsFromLastRequest } = parseRss(
+        response.data.contents,
+        'text/xml',
+      );
+      const newPostsFromLastRequest = _.differenceBy(
+        postsFromLastRequest,
+        watchedState.posts,
+        'link',
+      );
+      const newPosts = newPostsFromLastRequest.map((post) => ({
+        ...post,
+        id: _.uniqueId(),
+        sourceId: rssSource.id,
+      }));
+      return { rssSourceId: rssSource.id, newPosts };
+    });
+  });
+
+  Promise.all(updatePromises)
+    .then((updates) => {
+      updates.forEach((update) => {
         if (update.newPosts.length > 0) {
           /* eslint-disable  no-param-reassign */
           watchedState.posts.unshift(...update.newPosts);
           watchedState.updates = update;
           /* eslint-enable  no-param-reassign */
         }
-      })
-      .catch();
-  });
-  setTimeout(() => checkUpdates(watchedState), timeoutDelay);
+      });
+    })
+    .finally(setTimeout(() => checkUpdates(watchedState), timeoutDelay));
 };
 
 const setValidationLocale = () => {
@@ -56,16 +62,15 @@ const setValidationLocale = () => {
 };
 
 const validateRssLink = (watchedState) => {
-  const existingRssLinks = watchedState.rssSources.map((rssSource) => rssSource.link);
+  const existingRssLinks = watchedState.rssSources.map(
+    (rssSource) => rssSource.link,
+  );
   const schema = yup.object().shape({
     input: yup
       .string()
       .url()
       .required()
-      .notOneOf(
-        existingRssLinks,
-        'errors.formValidation.rssAlreadyExists',
-      ),
+      .notOneOf(existingRssLinks, 'errors.formValidation.rssAlreadyExists'),
   });
 
   try {
@@ -100,6 +105,7 @@ export default () => {
         readPostIDs: [],
         updates: [],
         language: 'en',
+        checkingUpdates: false,
       };
 
       const submit = document.getElementById('add-content-btn');
@@ -163,6 +169,10 @@ export default () => {
           .then(({ newSource, postsOfNewSource }) => {
             watchedState.posts.push(...postsOfNewSource);
             watchedState.rssSources.push(newSource);
+            if (!watchedState.checkingUpdates) {
+              watchedState.checkingUpdates = true;
+              setTimeout(() => checkUpdates(watchedState), 5000);
+            }
           })
           .catch((err) => {
             if (err.message === 'parse error') {
@@ -176,6 +186,6 @@ export default () => {
           });
       });
 
-      checkUpdates(watchedState);
+      // checkUpdates(watchedState);
     });
 };
