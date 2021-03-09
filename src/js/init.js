@@ -37,7 +37,6 @@ export default () => {
       activeSourceId: null,
       posts: [],
       readPostIDs: [],
-      updates: [],
       language: 'en',
       checkingUpdates: false,
     };

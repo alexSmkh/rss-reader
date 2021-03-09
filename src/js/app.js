@@ -16,34 +16,34 @@ const checkUpdates = (watchedState) => {
   const timeoutDelay = 5000;
   const updatePromises = watchedState.rssSources.map((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
-    return axios.get(proxyUrl).then((response) => {
-      const { posts: postsFromLastRequest } = parseRss(
-        response.data.contents,
-        'text/xml',
-      );
-      const newPostsFromLastRequest = _.differenceBy(
-        postsFromLastRequest,
-        watchedState.posts,
-        'link',
-      );
-      const newPosts = newPostsFromLastRequest.map((post) => ({
-        ...post,
-        id: _.uniqueId(),
-        sourceId: rssSource.id,
-      }));
-      if (newPosts.length === 0) return null;
-      return { rssSourceId: rssSource.id, newPosts };
-    });
+    return axios
+      .get(proxyUrl)
+      .then((response) => {
+        const { posts: postsFromLastRequest } = parseRss(
+          response.data.contents,
+          'text/xml',
+        );
+        const newPostsFromLastRequest = _.differenceBy(
+          postsFromLastRequest,
+          watchedState.posts,
+          'link',
+        );
+        const newPosts = newPostsFromLastRequest.map((post) => ({
+          ...post,
+          id: _.uniqueId(),
+          sourceId: rssSource.id,
+        }));
+        return newPosts;
+      })
+      .catch();
   });
 
   Promise.all(updatePromises)
     .then((updates) => {
       updates
-        .filter((update) => !!update)
         .forEach((update) => {
           /* eslint-disable  no-param-reassign */
-          watchedState.posts.unshift(...update.newPosts);
-          watchedState.updates = update;
+          watchedState.posts.unshift(...update);
           /* eslint-enable  no-param-reassign */
         });
     })

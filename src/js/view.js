@@ -569,13 +569,14 @@ const renderNotificationContainerForPostList = (
   }
 };
 
-const renderUpdates = (watchedState, updates) => {
-  const { rssSourceId, newPosts } = updates;
+const renderUpdates = (watchedState, newPosts) => {
+  // const { rssSourceId: sourceId, newPosts } = updates;
+  const { sourceId } = newPosts[0]
   const numberOfNewPosts = newPosts.length;
-  renderNotificationBadgeForRssList(watchedState, rssSourceId, numberOfNewPosts);
+  renderNotificationBadgeForRssList(watchedState, sourceId, numberOfNewPosts);
   renderNotificationContainerForPostList(
     watchedState,
-    rssSourceId,
+    sourceId,
     numberOfNewPosts,
   );
 };
@@ -705,31 +706,36 @@ const processStateHandler = (processState, elements) => {
 
 export default (state, elements) => {
   const { submit } = elements;
-  const watchedState = onChange(state, (path, value) => {
+  const watchedState = onChange(state, (path, currentValue, prevValue) => {
     switch (path) {
       case 'form.processState':
-        processStateHandler(value, elements);
+        processStateHandler(currentValue, elements);
         break;
       case 'form.valid':
-        submit.disabled = !value;
+        submit.disabled = !currentValue;
         break;
       case 'form.error':
-        renderValidationErrors(value, elements);
+        renderValidationErrors(currentValue, elements);
         break;
       case 'rssSources':
         renderRssContent(watchedState);
-        break;
-      case 'updates':
-        renderUpdates(watchedState, value);
         break;
       case 'activeSourceId':
         renderRssContent(watchedState);
         break;
       case 'language':
-        changeLanguage(value);
+        changeLanguage(currentValue);
         break;
       case 'error':
-        renderErrorAlert(value);
+        renderErrorAlert(currentValue);
+        break;
+      case 'posts':
+        if (prevValue.length > currentValue.length) break;
+        const newPosts = _.difference(currentValue, prevValue);
+        if (newPosts.length === 0) break;
+        const sourceId = newPosts[0].sourceId;
+        if (!_.find(prevValue, ['sourceId', sourceId])) break;
+        renderUpdates(watchedState, newPosts);
         break;
       default:
         break;
