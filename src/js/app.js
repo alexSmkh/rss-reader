@@ -39,12 +39,13 @@ const checkUpdates = (watchedState) => {
       .catch();
   });
 
-  Promise.all(updatePromises)
+  Promise.allSettled(updatePromises)
     .then((updates) => {
       updates
         .forEach((update) => {
+          if (update.status === 'rejected') return;
           /* eslint-disable  no-param-reassign */
-          watchedState.posts.unshift(...update);
+          watchedState.posts.unshift(...update.value);
           /* eslint-enable  no-param-reassign */
         });
     })
