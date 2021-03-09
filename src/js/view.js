@@ -570,7 +570,6 @@ const renderNotificationContainerForPostList = (
 };
 
 const renderUpdates = (watchedState, newPosts) => {
-  // const { rssSourceId: sourceId, newPosts } = updates;
   const { sourceId } = newPosts[0]
   const numberOfNewPosts = newPosts.length;
   renderNotificationBadgeForRssList(watchedState, sourceId, numberOfNewPosts);
