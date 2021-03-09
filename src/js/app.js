@@ -2,6 +2,7 @@ import * as yup from 'yup';
 import axios from 'axios';
 import _ from 'lodash';
 
+import initI18Next from './i18nextInit.js';
 import initView from './view.js';
 import parseRss from './parser.js';
 import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
@@ -16,42 +17,54 @@ const checkUpdates = (watchedState) => {
   const timeoutDelay = 5000;
   const updatePromises = watchedState.rssSources.map((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
-    return axios.get(proxyUrl).then((response) => {
-      const { posts: postsFromLastRequest } = parseRss(
-        response.data.contents,
-        'text/xml',
-      );
-      const newPostsFromLastRequest = _.differenceBy(
-        postsFromLastRequest,
-        watchedState.posts,
-        'link',
-      );
-      const newPosts = newPostsFromLastRequest.map((post) => ({
-        ...post,
-        id: _.uniqueId(),
-        sourceId: rssSource.id,
-      }));
-      if (newPosts.length === 0) return null;
-      return { rssSourceId: rssSource.id, newPosts };
-    });
+    return axios
+      .get(proxyUrl)
+      .then((response) => {
+        const { posts: postsFromLastRequest } = parseRss(
+          response.data.contents,
+          'text/xml',
+        );
+        const newPostsFromLastRequest = _.differenceBy(
+          postsFromLastRequest,
+          watchedState.posts,
+          'link',
+        );
+        const newPosts = newPostsFromLastRequest.map((post) => ({
+          ...post,
+          id: _.uniqueId(),
+          sourceId: rssSource.id,
+        }));
+        return newPosts;
+      })
+      .catch();
   });
 
   Promise.all(updatePromises)
     .then((updates) => {
       updates
-        .filter((update) => !!update)
         .forEach((update) => {
           /* eslint-disable  no-param-reassign */
-          watchedState.posts.unshift(...update.newPosts);
-          watchedState.updates = update;
+          watchedState.posts.unshift(...update);
           /* eslint-enable  no-param-reassign */
         });
     })
     .finally(setTimeout(() => checkUpdates(watchedState), timeoutDelay));
 };
 
-const validateRssLink = (watchedState) => {
-  const existingRssLinks = watchedState.rssSources.map(
+const setValidationLocale = () => {
+  yup.setLocale({
+    string: {
+      url: 'errors.formValidation.url',
+      notOneOf: 'errors.formValidation.rssAlreadyExists',
+    },
+    mixed: {
+      required: 'errors.formValidation.required',
+    },
+  });
+};
+
+const validateRssLink = (rssSources, formFields) => {
+  const existingRssLinks = rssSources.map(
     (rssSource) => rssSource.link,
   );
   const schema = yup.object().shape({
@@ -59,18 +72,38 @@ const validateRssLink = (watchedState) => {
       .string()
       .url()
       .required()
-      .notOneOf(existingRssLinks, 'errors.formValidation.rssAlreadyExists'),
+      .notOneOf(existingRssLinks),
   });
 
   try {
-    schema.validateSync(watchedState.form.fields);
+    schema.validateSync(formFields);
     return null;
   } catch (e) {
     return e.errors[0];
   }
 };
 
-export default (state) => {
+export default () => {
+  initI18Next();
+  setValidationLocale();
+
+  const state = {
+    form: {
+      valid: false,
+      processState: 'filling',
+      fields: {
+        input: '',
+      },
+      error: null,
+    },
+    rssSources: [],
+    activeSourceId: null,
+    posts: [],
+    readPostIDs: [],
+    language: 'en',
+    checkingUpdates: false,
+  };
+
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
@@ -90,7 +123,7 @@ export default (state) => {
     e.preventDefault();
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
-    const error = validateRssLink(watchedState);
+    const error = validateRssLink(watchedState.rssSources, watchedState.form.fields);
     watchedState.form.valid = !error;
     watchedState.form.error = error;
   });
