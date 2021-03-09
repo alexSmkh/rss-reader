@@ -1,9 +1,9 @@
 import onChange from 'on-change';
 import _ from 'lodash';
-import i18n from 'i18next';
+import { i18nInstance } from './i18nextInit.js';
 
 const changeLanguage = (language) => {
-  i18n.changeLanguage(language).then((t) => {
+  i18nInstance.changeLanguage(language).then((t) => {
     const btns = document.querySelectorAll('[name="change-language"]');
     btns.forEach((btn) => btn.classList.toggle('active'));
 
@@ -37,14 +37,14 @@ const showBtnSpinner = (btn) => {
   const spinner = document.createElement('span');
   spinner.classList.add('spinner-border', 'spinner-border-sm', 'ml-1');
   /* eslint-disable  no-param-reassign */
-  btn.textContent = i18n.t('header.form.btn.loading');
+  btn.textContent = i18nInstance.t('header.form.btn.loading');
   /* eslint-enable  no-param-reassign */
   btn.appendChild(spinner);
 };
 
 const hideBtnSpinner = (btn) => {
   /* eslint-disable  no-param-reassign */
-  btn.textContent = i18n.t('header.form.btn.content');
+  btn.textContent = i18nInstance.t('header.form.btn.content');
   /* eslint-enable  no-param-reassign */
 };
 
@@ -181,7 +181,7 @@ const buildNotificationBadge = () => {
     'd-flex',
     'align-items-center',
   );
-  badge.textContent = i18n.t('post.new');
+  badge.textContent = i18nInstance.t('post.new');
   badge.setAttribute('data-translation-key', 'post.new');
   badge.style.maxHeight = '22px';
   return badge;
@@ -232,7 +232,7 @@ const buildPostCard = (watchedState, post) => {
   elementWrapper.classList.add('wrapper');
 
   const previewBtn = document.createElement('button');
-  previewBtn.textContent = i18n.t('post.btn');
+  previewBtn.textContent = i18nInstance.t('post.btn');
   previewBtn.setAttribute('data-translation-key', 'post.btn');
   previewBtn.classList.add('btn', 'btn-secondary', 'mr-1');
 
@@ -263,7 +263,7 @@ const buildPostCard = (watchedState, post) => {
 
     markAsReadLink = document.createElement('a');
     markAsReadLink.setAttribute('href', '#');
-    markAsReadLink.textContent = i18n.t('post.markAsRead');
+    markAsReadLink.textContent = i18nInstance.t('post.markAsRead');
     markAsReadLink.setAttribute('data-translation-key', 'post.markAsRead');
     markAsReadLink.setAttribute('name', 'mark-as-read-link');
     markAsReadLink.classList.add('text-muted', 'ml-2');
@@ -470,7 +470,7 @@ const buildNotificationContainerForPostList = (
     'data-translation-key',
     'notificationForPostList.beforeBadge',
   );
-  textBeforeBadge.textContent = i18n.t('notificationForPostList.beforeBadge');
+  textBeforeBadge.textContent = i18nInstance.t('notificationForPostList.beforeBadge');
 
   const textAfterBadge = document.createElement('span');
   textAfterBadge.setAttribute(
@@ -479,7 +479,7 @@ const buildNotificationContainerForPostList = (
   );
   textAfterBadge.setAttribute('data-number-for-translate', numberOfNewPosts);
 
-  textAfterBadge.textContent = i18n.t(
+  textAfterBadge.textContent = i18nInstance.t(
     'notificationForPostList.afterBadge.after',
     { count: numberOfNewPosts },
   );
@@ -520,7 +520,7 @@ const updateNotificationContainerForPostList = (
   badge.textContent = numberOfNewPosts;
 
   const afterBadgeContent = badge.nextSibling;
-  afterBadgeContent.textContent = i18n.t(
+  afterBadgeContent.textContent = i18nInstance.t(
     'notificationForPostList.afterBadge.after',
     { count: numberOfNewPosts },
   );
@@ -569,8 +569,12 @@ const renderNotificationContainerForPostList = (
   }
 };
 
-const renderUpdates = (watchedState, newPosts) => {
-  const { sourceId } = newPosts[0]
+const renderUpdates = (watchedState, currentPosts, previousPosts) => {
+  if (previousPosts.length > currentPosts.length) return;
+  const newPosts = _.difference(currentPosts, previousPosts);
+  if (newPosts.length === 0) return;
+  const { sourceId } = newPosts[0];
+  if (!_.find(previousPosts, ['sourceId', sourceId])) return;
   const numberOfNewPosts = newPosts.length;
   renderNotificationBadgeForRssList(watchedState, sourceId, numberOfNewPosts);
   renderNotificationContainerForPostList(
@@ -600,7 +604,7 @@ const renderSucceedFeedback = (elemets) => {
   const feedback = document.createElement('div');
   feedback.classList.add('valid-feedback');
   feedback.setAttribute('data-translation-key', 'header.form.succeedFeedback');
-  feedback.textContent = i18n.t('header.form.succeedFeedback');
+  feedback.textContent = i18nInstance.t('header.form.succeedFeedback');
 
   input.classList.add('is-valid');
   input.after(feedback);
@@ -628,7 +632,7 @@ const renderValidationErrors = (errorKeyForTranslate, elements) => {
 
   const feedback = document.createElement('div');
   feedback.classList.add('invalid-feedback');
-  feedback.textContent = i18n.t(errorKeyForTranslate);
+  feedback.textContent = i18nInstance.t(errorKeyForTranslate);
 
   input.classList.add('is-invalid');
   input.after(feedback);
@@ -729,12 +733,7 @@ export default (state, elements) => {
         renderErrorAlert(currentValue);
         break;
       case 'posts':
-        if (prevValue.length > currentValue.length) break;
-        const newPosts = _.difference(currentValue, prevValue);
-        if (newPosts.length === 0) break;
-        const sourceId = newPosts[0].sourceId;
-        if (!_.find(prevValue, ['sourceId', sourceId])) break;
-        renderUpdates(watchedState, newPosts);
+        renderUpdates(watchedState, currentValue, prevValue);
         break;
       default:
         break;

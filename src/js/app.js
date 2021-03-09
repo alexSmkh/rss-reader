@@ -2,6 +2,7 @@ import * as yup from 'yup';
 import axios from 'axios';
 import _ from 'lodash';
 
+import initI18Next from './i18nextInit.js';
 import initView from './view.js';
 import parseRss from './parser.js';
 import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
@@ -50,6 +51,17 @@ const checkUpdates = (watchedState) => {
     .finally(setTimeout(() => checkUpdates(watchedState), timeoutDelay));
 };
 
+const setValidationLocale = () => {
+  yup.setLocale({
+    string: {
+      url: 'errors.formValidation.url',
+    },
+    mixed: {
+      required: 'errors.formValidation.required',
+    },
+  });
+};
+
 const validateRssLink = (watchedState) => {
   const existingRssLinks = watchedState.rssSources.map(
     (rssSource) => rssSource.link,
@@ -70,7 +82,27 @@ const validateRssLink = (watchedState) => {
   }
 };
 
-export default (state) => {
+export default () => {
+  initI18Next();
+  setValidationLocale();
+
+  const state = {
+    form: {
+      valid: false,
+      processState: 'filling',
+      fields: {
+        input: '',
+      },
+      error: null,
+    },
+    rssSources: [],
+    activeSourceId: null,
+    posts: [],
+    readPostIDs: [],
+    language: 'en',
+    checkingUpdates: false,
+  };
+
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
