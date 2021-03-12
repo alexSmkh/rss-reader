@@ -8,12 +8,6 @@ import parseRss from './parser.js';
 import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
 
 const checkUpdates = (watchedState) => {
-  if (!watchedState.checkingUpdates) {
-    /* eslint-disable  no-param-reassign */
-    watchedState.checkingUpdates = false;
-    /* eslint-enable  no-param-reassign */
-    return;
-  }
   const timeoutDelay = 5000;
   const updatePromises = watchedState.rssSources.map((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
@@ -49,7 +43,11 @@ const checkUpdates = (watchedState) => {
           /* eslint-enable  no-param-reassign */
         });
     })
-    .finally(setTimeout(() => checkUpdates(watchedState), timeoutDelay));
+    .finally(() => {
+      if (watchedState.rssSources.length > 0) {
+        setTimeout(() => checkUpdates(watchedState), timeoutDelay);
+      }
+    });
 };
 
 const setValidationLocale = () => {
@@ -102,7 +100,6 @@ export default () => {
     posts: [],
     readPostIDs: [],
     language: 'en',
-    checkingUpdates: false,
   };
 
   const submit = document.getElementById('add-content-btn');
@@ -164,8 +161,7 @@ export default () => {
       .then(({ newSource, postsOfNewSource }) => {
         watchedState.posts.push(...postsOfNewSource);
         watchedState.rssSources.push(newSource);
-        if (!watchedState.checkingUpdates) {
-          watchedState.checkingUpdates = true;
+        if (watchedState.rssSources.length === 1) {
           setTimeout(() => checkUpdates(watchedState), 5000);
         }
       })
