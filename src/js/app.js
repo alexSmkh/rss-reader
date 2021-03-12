@@ -139,9 +139,6 @@ export default () => {
           };
         });
 
-        return { newSource, postsOfNewSource };
-      })
-      .then(({ newSource, postsOfNewSource }) => {
         watchedState.posts.push(...postsOfNewSource);
         watchedState.rssSources.push(newSource);
         if (watchedState.rssSources.length === 1) {
