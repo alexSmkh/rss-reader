@@ -43,10 +43,10 @@ const setValidationLocale = () => {
   yup.setLocale({
     string: {
       url: 'errors.formValidation.url',
-      notOneOf: 'errors.formValidation.rssAlreadyExists',
     },
     mixed: {
       required: 'errors.formValidation.required',
+      notOneOf: 'errors.formValidation.rssAlreadyExists',
     },
   });
 };
