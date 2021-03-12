@@ -51,20 +51,13 @@ const setValidationLocale = () => {
   });
 };
 
-const validateRssLink = (rssSources, formFields) => {
-  const existingRssLinks = rssSources.map(
-    (rssSource) => rssSource.link,
-  );
+const validate = (urlList, url) => {
   const schema = yup.object().shape({
-    input: yup
-      .string()
-      .url()
-      .required()
-      .notOneOf(existingRssLinks),
+    url: yup.string().url().required().notOneOf(urlList),
   });
 
   try {
-    schema.validateSync(formFields);
+    schema.validateSync({ url });
     return null;
   } catch (e) {
     return e.errors[0];
@@ -110,7 +103,8 @@ export default () => {
     e.preventDefault();
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
-    const error = validateRssLink(watchedState.rssSources, watchedState.form.fields);
+    const existingRssLinks = watchedState.rssSources.map((rssSource) => rssSource.link);
+    const error = validate(existingRssLinks, rssLink);
     watchedState.form.valid = !error;
     watchedState.form.error = error;
   });
