@@ -9,7 +9,7 @@ import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
 
 const checkUpdates = (watchedState) => {
   const timeoutDelay = 5000;
-  const updatePromises = watchedState.rssSources.map((rssSource) => {
+  watchedState.rssSources.forEach((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
     return axios
       .get(proxyUrl)
@@ -28,26 +28,15 @@ const checkUpdates = (watchedState) => {
           id: _.uniqueId(),
           sourceId: rssSource.id,
         }));
-        return newPosts;
+        watchedState.posts.unshift(...newPosts);
       })
-      .catch();
+      .catch()
+      .finally(() => {
+        if (watchedState.rssSources.length > 0) {
+          setTimeout(() => checkUpdates(watchedState), timeoutDelay);
+        }
+      });
   });
-
-  Promise.allSettled(updatePromises)
-    .then((updates) => {
-      updates
-        .forEach((update) => {
-          if (update.status === 'rejected') return;
-          /* eslint-disable  no-param-reassign */
-          watchedState.posts.unshift(...update.value);
-          /* eslint-enable  no-param-reassign */
-        });
-    })
-    .finally(() => {
-      if (watchedState.rssSources.length > 0) {
-        setTimeout(() => checkUpdates(watchedState), timeoutDelay);
-      }
-    });
 };
 
 const setValidationLocale = () => {
