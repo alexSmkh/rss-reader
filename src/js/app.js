@@ -142,10 +142,11 @@ const runApp = (state, i18n) => {
           watchedState.form.error = 'errors.isNotSupported';
           watchedState.form.processState = 'failed';
           watchedState.form.valid = false;
-          return;
         }
-        watchedState.form.processState = 'failed';
-        watchedState.error = err;
+        if (err.message === 'Network Error') {
+          watchedState.form.processState = 'failed';
+          watchedState.error = err;
+        }
       });
   });
 };
