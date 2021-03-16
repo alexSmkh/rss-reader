@@ -1,50 +1,48 @@
 import onChange from 'on-change';
 import _ from 'lodash';
-import { i18nInstance } from './i18nextInit.js';
 
-const changeLanguage = (language) => {
-  i18nInstance.changeLanguage(language).then((t) => {
-    const btns = document.querySelectorAll('[name="change-language"]');
-    btns.forEach((btn) => btn.classList.toggle('active'));
+const changeLanguage = (language, i18n) => {
+  /* eslint-disable  no-param-reassign */
+  i18n.t = i18n[language];
+  const btns = document.querySelectorAll('[name="change-language"]');
+  btns.forEach((btn) => btn.classList.toggle('active'));
 
-    const elementsForTranslate = document.querySelectorAll(
-      '[data-translation-key]',
-    );
-    elementsForTranslate.forEach((element) => {
-      const { translationKey } = element.dataset;
-      /* eslint-disable  no-param-reassign */
-      element.textContent = t(translationKey);
-      /* eslint-enable  no-param-reassign */
-    });
+  const elementsForTranslate = document.querySelectorAll(
+    '[data-translation-key]',
+  );
+  elementsForTranslate.forEach((element) => {
+    const { translationKey } = element.dataset;
+    element.textContent = i18n.t(translationKey);
+    /* eslint-enable  no-param-reassign */
+  });
 
-    const rssInput = document.getElementById('rss-input');
-    rssInput.setAttribute('placeholder', t('header.form.placeholder'));
+  const rssInput = document.getElementById('rss-input');
+  rssInput.setAttribute('placeholder', i18n.t('header.form.placeholder'));
 
-    const elementsForTranslatePlural = document.querySelectorAll(
-      '[data-translation-key-plural]',
-    );
-    elementsForTranslatePlural.forEach((element) => {
-      const translationKey = element.dataset.translationKeyPlural;
-      const count = parseInt(element.dataset.numberForTranslate, 10);
-      /* eslint-disable  no-param-reassign */
-      element.textContent = t(translationKey, { count });
-      /* eslint-enable  no-param-reassign */
-    });
+  const elementsForTranslatePlural = document.querySelectorAll(
+    '[data-translation-key-plural]',
+  );
+  elementsForTranslatePlural.forEach((element) => {
+    const translationKey = element.dataset.translationKeyPlural;
+    const count = parseInt(element.dataset.numberForTranslate, 10);
+    /* eslint-disable  no-param-reassign */
+    element.textContent = i18n.t(translationKey, { count });
+    /* eslint-enable  no-param-reassign */
   });
 };
 
-const showBtnSpinner = (btn) => {
+const showBtnSpinner = (btn, i18n) => {
   const spinner = document.createElement('span');
   spinner.classList.add('spinner-border', 'spinner-border-sm', 'ml-1');
   /* eslint-disable  no-param-reassign */
-  btn.textContent = i18nInstance.t('header.form.btn.loading');
+  btn.textContent = i18n.t('header.form.btn.loading');
   /* eslint-enable  no-param-reassign */
   btn.appendChild(spinner);
 };
 
-const hideBtnSpinner = (btn) => {
+const hideBtnSpinner = (btn, i18n) => {
   /* eslint-disable  no-param-reassign */
-  btn.textContent = i18nInstance.t('header.form.btn.content');
+  btn.textContent = i18n.t('header.form.btn.content');
   /* eslint-enable  no-param-reassign */
 };
 
@@ -173,7 +171,7 @@ const markPostAsRead = (post, markAsReadLink, cardHeader, postTitle) => {
   badge.textContent = numberOfUnreadPosts - 1;
 };
 
-const buildNotificationBadge = () => {
+const buildNotificationBadge = (i18n) => {
   const badge = document.createElement('span');
   badge.classList.add(
     'badge',
@@ -183,7 +181,7 @@ const buildNotificationBadge = () => {
     'd-flex',
     'align-items-center',
   );
-  badge.textContent = i18nInstance.t('post.new');
+  badge.textContent = i18n.t('post.new');
   badge.setAttribute('data-translation-key', 'post.new');
   badge.style.maxHeight = '22px';
   return badge;
@@ -204,7 +202,7 @@ const buildNotificationBadgeCounter = (numberOfUnreadPosts) => {
   return notificationBadge;
 };
 
-const buildPostCard = (watchedState, post) => {
+const buildPostCard = (watchedState, post, i18n) => {
   const card = document.createElement('div');
   card.classList.add('card', 'shadow', 'mb-3');
   card.setAttribute('data-post-id', post.id);
@@ -234,7 +232,7 @@ const buildPostCard = (watchedState, post) => {
   elementWrapper.classList.add('wrapper');
 
   const previewBtn = document.createElement('button');
-  previewBtn.textContent = i18nInstance.t('post.btn');
+  previewBtn.textContent = i18n.t('post.btn');
   previewBtn.setAttribute('data-translation-key', 'post.btn');
   previewBtn.classList.add('btn', 'btn-secondary', 'mr-1');
 
@@ -260,12 +258,12 @@ const buildPostCard = (watchedState, post) => {
   let markAsReadLink;
   if (!watchedState.readPostIDs.includes(post.id)) {
     postTitle.classList.replace('font-weight-normal', 'font-weight-bold');
-    const badge = buildNotificationBadge();
+    const badge = buildNotificationBadge(i18n);
     cardHeader.appendChild(badge);
 
     markAsReadLink = document.createElement('a');
     markAsReadLink.setAttribute('href', '#');
-    markAsReadLink.textContent = i18nInstance.t('post.markAsRead');
+    markAsReadLink.textContent = i18n.t('post.markAsRead');
     markAsReadLink.setAttribute('data-translation-key', 'post.markAsRead');
     markAsReadLink.setAttribute('name', 'mark-as-read-link');
     markAsReadLink.classList.add('text-muted', 'ml-2');
@@ -410,10 +408,10 @@ const buildRssListSection = (rssList) => {
   return rssListSection;
 };
 
-const buildPostList = (watchedState) => (
+const buildPostList = (watchedState, i18n) => (
   watchedState.posts
     .filter((post) => watchedState.activeSourceId === post.sourceId)
-    .map((post) => buildPostCard(watchedState, post))
+    .map((post) => buildPostCard(watchedState, post, i18n))
 );
 
 const buildRssList = (watchedState) => (
@@ -448,7 +446,7 @@ const renderStartPage = () => {
   rssContent.appendChild(container);
 };
 
-const renderRssContent = (watchedState) => {
+const renderRssContent = (watchedState, i18n) => {
   if (!watchedState.activeSourceId) {
     renderStartPage();
     return;
@@ -459,7 +457,7 @@ const renderRssContent = (watchedState) => {
   const rssList = buildRssList(watchedState);
   const rssListSection = buildRssListSection(rssList);
 
-  const postList = buildPostList(watchedState);
+  const postList = buildPostList(watchedState, i18n);
   const postListSection = buildPostListSection(postList);
 
   rssContent.innerHTML = '';
@@ -470,13 +468,14 @@ const renderRssContent = (watchedState) => {
 const updateNotificationContainerForPostList = (
   notificationContainer,
   numberOfLastUpdates,
+  i18n,
 ) => {
   const badge = notificationContainer.querySelector('.badge');
   const numberOfNewPosts = parseInt(badge.textContent, 10) + numberOfLastUpdates;
   badge.textContent = numberOfNewPosts;
 
   const afterBadgeContent = badge.nextSibling;
-  afterBadgeContent.textContent = i18nInstance.t(
+  afterBadgeContent.textContent = i18n.t(
     'notificationForPostList.afterBadge.after',
     { count: numberOfNewPosts },
   );
@@ -487,6 +486,7 @@ const renderNotificationBadgeForRssList = (
   watchedState,
   rssSourceId,
   numberOfNewPosts,
+  i18n,
 ) => {
   const rssSourceList = document.querySelector('[name="rss-source-list"]');
   const rssDOMElement = rssSourceList.querySelector(
@@ -498,7 +498,7 @@ const renderNotificationBadgeForRssList = (
       watchedState,
       rssSourceId,
     );
-    notificationBadge = buildNotificationBadge(numberOfUnreadPosts);
+    notificationBadge = buildNotificationBadge(i18n, numberOfUnreadPosts);
     const badgeWrapper = rssDOMElement.querySelector('.notificatonWrapper');
     badgeWrapper.prepend(notificationBadge);
     return;
@@ -510,6 +510,7 @@ const renderNotificationBadgeForRssList = (
 const buildNotificationContainerForPostList = (
   watchedState,
   numberOfNewPosts,
+  i18n,
 ) => {
   const container = document.createElement('div');
   container.classList.add(
@@ -533,9 +534,7 @@ const buildNotificationContainerForPostList = (
     'data-translation-key',
     'notificationForPostList.beforeBadge',
   );
-  textBeforeBadge.textContent = i18nInstance.t(
-    'notificationForPostList.beforeBadge',
-  );
+  textBeforeBadge.textContent = i18n.t('notificationForPostList.beforeBadge');
 
   const textAfterBadge = document.createElement('span');
   textAfterBadge.setAttribute(
@@ -544,7 +543,7 @@ const buildNotificationContainerForPostList = (
   );
   textAfterBadge.setAttribute('data-number-for-translate', numberOfNewPosts);
 
-  textAfterBadge.textContent = i18nInstance.t(
+  textAfterBadge.textContent = i18n.t(
     'notificationForPostList.afterBadge.after',
     { count: numberOfNewPosts },
   );
@@ -565,9 +564,9 @@ const buildNotificationContainerForPostList = (
       (post) => watchedState.activeSourceId === post.sourceId,
     );
     overflowContainer.innerHTML = '';
-    posts.forEach((post) => overflowContainer.appendChild(
-      buildPostCard(watchedState, post),
-    ));
+    posts.forEach((post) => {
+      overflowContainer.appendChild(buildPostCard(watchedState, post));
+    });
     container.remove();
   });
 
@@ -578,6 +577,7 @@ const renderNotificationContainerForPostList = (
   watchedState,
   rssSourceId,
   numberOfNewPosts,
+  i18n,
 ) => {
   if (rssSourceId === watchedState.activeSourceId) {
     const postList = document.querySelector('[name="overflow-post-list"]');
@@ -588,38 +588,46 @@ const renderNotificationContainerForPostList = (
       notificationContainer = buildNotificationContainerForPostList(
         watchedState,
         numberOfNewPosts,
+        i18n,
       );
     } else {
       updateNotificationContainerForPostList(
         notificationContainer,
         numberOfNewPosts,
+        i18n,
       );
     }
     postList.prepend(notificationContainer);
   }
 };
 
-const renderUpdates = (watchedState, currentPosts, previousPosts) => {
+const renderUpdates = (watchedState, currentPosts, previousPosts, i18n) => {
   if (previousPosts.length > currentPosts.length) return;
   const newPosts = _.difference(currentPosts, previousPosts);
   if (newPosts.length === 0) return;
   const { sourceId } = newPosts[0];
   if (!_.find(previousPosts, ['sourceId', sourceId])) return;
   const numberOfNewPosts = newPosts.length;
-  renderNotificationBadgeForRssList(watchedState, sourceId, numberOfNewPosts);
+  renderNotificationBadgeForRssList(
+    watchedState,
+    sourceId,
+    numberOfNewPosts,
+    i18n,
+  );
   renderNotificationContainerForPostList(
     watchedState,
     sourceId,
     numberOfNewPosts,
+    i18n,
   );
 };
 
-const renderSucceedFeedback = (elemets) => {
+const renderSucceedFeedback = (elemets, i18n) => {
   const { input, form } = elemets;
   const feedback = document.createElement('div');
   feedback.classList.add('valid-feedback');
   feedback.setAttribute('data-translation-key', 'header.form.succeedFeedback');
-  feedback.textContent = i18nInstance.t('header.form.succeedFeedback');
+  feedback.textContent = i18n.t('header.form.succeedFeedback');
 
   input.classList.add('is-valid');
   input.after(feedback);
@@ -632,7 +640,7 @@ const renderSucceedFeedback = (elemets) => {
   }, 3000);
 };
 
-const renderValidationErrors = (errorKeyForTranslate, elements) => {
+const renderValidationErrors = (errorKeyForTranslate, elements, i18n) => {
   const { input } = elements;
 
   const prevFeedback = input.nextSibling;
@@ -647,7 +655,7 @@ const renderValidationErrors = (errorKeyForTranslate, elements) => {
 
   const feedback = document.createElement('div');
   feedback.classList.add('invalid-feedback');
-  feedback.textContent = i18nInstance.t(errorKeyForTranslate);
+  feedback.textContent = i18n.t(errorKeyForTranslate);
 
   input.classList.add('is-invalid');
   input.after(feedback);
@@ -701,20 +709,20 @@ const renderErrorAlert = (error) => {
   }, 5000);
 };
 
-const processStateHandler = (processState, elements) => {
+const processStateHandler = (processState, elements, i18n) => {
   const { submit } = elements;
   switch (processState) {
     case 'filling':
       submit.disabled = false;
-      renderSucceedFeedback(elements);
-      hideBtnSpinner(submit);
+      renderSucceedFeedback(elements, i18n);
+      hideBtnSpinner(submit, i18n);
       break;
     case 'sending':
       submit.disabled = true;
-      showBtnSpinner(submit);
+      showBtnSpinner(submit, i18n);
       break;
     case 'failed':
-      hideBtnSpinner(submit);
+      hideBtnSpinner(submit, i18n);
       submit.disabled = false;
       break;
     default:
@@ -722,33 +730,33 @@ const processStateHandler = (processState, elements) => {
   }
 };
 
-export default (state, elements) => {
+export default (state, elements, i18n) => {
   const { submit } = elements;
   const watchedState = onChange(state, (path, currentValue, prevValue) => {
     switch (path) {
       case 'form.processState':
-        processStateHandler(currentValue, elements);
+        processStateHandler(currentValue, elements, i18n);
         break;
       case 'form.valid':
         submit.disabled = !currentValue;
         break;
       case 'form.error':
-        renderValidationErrors(currentValue, elements);
+        renderValidationErrors(currentValue, elements, i18n);
         break;
       case 'rssSources':
-        renderRssContent(watchedState);
+        renderRssContent(watchedState, i18n);
         break;
       case 'activeSourceId':
-        renderRssContent(watchedState);
+        renderRssContent(watchedState, i18n);
         break;
       case 'language':
-        changeLanguage(currentValue);
+        changeLanguage(currentValue, i18n);
         break;
       case 'error':
         renderErrorAlert(currentValue);
         break;
       case 'posts':
-        renderUpdates(watchedState, currentValue, prevValue);
+        renderUpdates(watchedState, currentValue, prevValue, i18n);
         break;
       default:
         break;
