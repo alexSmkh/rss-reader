@@ -54,43 +54,17 @@ const getNumberOfUnreadPosts = (watchedState, rssSourceId) => {
   return unreadPosts.length;
 };
 
-const hideModalDialog = (modal, modalBackdrop) => {
-  /* eslint-disable  no-param-reassign */
-  modal.style.display = 'none';
-  modal.removeAttribute('aria-modal');
-  modal.setAttribute('aria-hidden', 'true');
-  modalBackdrop.style.display = 'none';
-  /* eslint-enable  no-param-reassign */
-};
-
 const showModalDialog = (post) => {
-  const modal = document.getElementById('modal');
-  const modalBackdrop = document.querySelector('.modal-backdrop');
+  const modal = document.getElementById('preview-modal');
 
-  const modalTitle = document.querySelector('.modal-title');
+  const modalTitle = modal.querySelector('.modal-title');
   modalTitle.textContent = post.title;
 
-  const headerCloseBtn = document.querySelector('.modal-header > .close');
-  headerCloseBtn.addEventListener('click', () => hideModalDialog(modal));
-
-  const modalBodyContent = document.querySelector('.modal-body > p');
+  const modalBodyContent = modal.querySelector('.modal-body > p');
   modalBodyContent.textContent = post.description;
 
-  const closeBtn = document.getElementById('modal-close-btn');
-  closeBtn.addEventListener('click', () => {
-    hideModalDialog(modal, modalBackdrop);
-  });
-  const openBtn = document.querySelector('[data-open="modal"');
+  const openBtn = modal.querySelector('.modal-footer > a');
   openBtn.setAttribute('href', post.link);
-  openBtn.addEventListener('click', () => {
-    hideModalDialog(modal, modalBackdrop);
-  });
-
-  modal.classList.add('show');
-  modal.style.display = 'block';
-  modal.setAttribute('aria-modal', 'true');
-  modal.removeAttribute('aria-hidden');
-  modalBackdrop.style.display = 'block';
 };
 
 const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
@@ -233,7 +207,10 @@ const buildPostCard = (watchedState, post, i18n) => {
 
   const previewBtn = document.createElement('button');
   previewBtn.textContent = i18n.t('post.btn');
+  previewBtn.setAttribute('type', 'button');
   previewBtn.setAttribute('data-translation-key', 'post.btn');
+  previewBtn.setAttribute('data-toggle', 'modal');
+  previewBtn.setAttribute('data-target', '#preview-modal');
   previewBtn.classList.add('btn', 'btn-secondary', 'mr-1');
 
   elementWrapper.appendChild(previewBtn);
