@@ -267,7 +267,11 @@ const buildPostCard = (watchedState, post, i18n) => {
 
 const buildRssSourceCard = (watchedState, rssSource) => {
   const card = document.createElement('div');
-  card.classList.add('card', 'shadow', 'mb-2');
+  const classesForActiveSource = watchedState.activeSourceId === rssSource.id
+    ? ['border', 'border-success']
+    : [];
+
+  card.classList.add('card', 'shadow-sm', 'mb-2', ...classesForActiveSource);
   card.setAttribute('data-source-id', rssSource.id);
 
   const cardHeader = document.createElement('div');
