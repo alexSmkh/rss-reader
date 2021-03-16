@@ -80,10 +80,12 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
     const postsIDsOfRssSourceTarget = watchedState.posts
       .filter((post) => post.sourceId === rssSourceOfTargetElement.id)
       .map((post) => post.id);
-    const readPostIDs = _.clone(watchedState.readPostIDs);
-    watchedState.readPostIDs = _.difference(
-      readPostIDs,
-      postsIDsOfRssSourceTarget,
+    // const readPostIDs = _.clone(watchedState.readPostIDs);
+    watchedState.readPostIDs = new Set(
+      _.difference(
+        watchedState.readPostIDs,
+        postsIDsOfRssSourceTarget,
+      ),
     );
 
     const updatedRssSources = watchedState.rssSources.filter(
@@ -233,7 +235,7 @@ const buildPostCard = (watchedState, post, i18n) => {
   });
 
   let markAsReadLink;
-  if (!watchedState.readPostIDs.includes(post.id)) {
+  if (!watchedState.readPostIDs.has(post.id)) {
     postTitle.classList.replace('font-weight-normal', 'font-weight-bold');
     const badge = buildNotificationBadge(i18n);
     cardHeader.appendChild(badge);
@@ -246,7 +248,7 @@ const buildPostCard = (watchedState, post, i18n) => {
     markAsReadLink.classList.add('text-muted', 'ml-2');
     markAsReadLink.addEventListener('click', (e) => {
       e.preventDefault();
-      watchedState.readPostIDs.push(post.id);
+      watchedState.readPostIDs.add(post.id);
       markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
     });
     elementWrapper.appendChild(markAsReadLink);
@@ -254,8 +256,8 @@ const buildPostCard = (watchedState, post, i18n) => {
 
   previewBtn.addEventListener('click', () => {
     showModalDialog(post);
-    if (!watchedState.readPostIDs.includes(post.id)) {
-      watchedState.readPostIDs.push(post.id);
+    if (!watchedState.readPostIDs.has(post.id)) {
+      watchedState.readPostIDs.add(post.id);
       markPostAsRead(post, markAsReadLink, cardHeader, postTitle);
     }
   });
@@ -534,17 +536,7 @@ const buildNotificationContainerForPostList = (
   container.appendChild(textAfterBadge);
 
   container.addEventListener('click', () => {
-    const overflowContainer = document.querySelector(
-      '[name="overflow-post-list"]',
-    );
-    const posts = watchedState.posts.filter(
-      (post) => watchedState.activeSourceId === post.sourceId,
-    );
-    overflowContainer.innerHTML = '';
-    posts.forEach((post) => {
-      overflowContainer.appendChild(buildPostCard(watchedState, post));
-    });
-    container.remove();
+    renderRssContent(watchedState, i18n);
   });
 
   return container;

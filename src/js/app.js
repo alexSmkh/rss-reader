@@ -172,7 +172,7 @@ export default () => {
       rssSources: [],
       activeSourceId: null,
       posts: [],
-      readPostIDs: [],
+      readPostIDs: new Set(),
       language: 'en',
     };
     runApp(state, i18n);
