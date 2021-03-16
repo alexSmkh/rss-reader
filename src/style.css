@@ -1,3 +1,7 @@
+.border-3 {
+  border-right-width: 5px;
+}
+
 @media (max-width: 590px) {
   [name='header-title'] {
     font-size: x-large;

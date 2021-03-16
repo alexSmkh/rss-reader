@@ -268,10 +268,10 @@ const buildPostCard = (watchedState, post, i18n) => {
 const buildRssSourceCard = (watchedState, rssSource) => {
   const card = document.createElement('div');
   const classesForActiveSource = watchedState.activeSourceId === rssSource.id
-    ? ['border', 'border-success']
+    ? ['border-3']
     : [];
 
-  card.classList.add('card', 'shadow-sm', 'mb-2', ...classesForActiveSource);
+  card.classList.add('card', 'shadow-sm', 'mb-3', ...classesForActiveSource);
   card.setAttribute('data-source-id', rssSource.id);
 
   const cardHeader = document.createElement('div');
@@ -324,11 +324,8 @@ const buildRssSourceCard = (watchedState, rssSource) => {
 
   card.addEventListener('mouseenter', (e) => {
     e.preventDefault();
-    if (!card.classList.contains('active')) {
-      card.classList.replace('shadow', 'shadow-sm');
-      card.style.transition = 'box-shadow .5s';
-    }
-
+    card.classList.replace('shadow-sm', 'shadow');
+    card.style.transition = 'box-shadow .5s';
     card.style.cursor = 'pointer';
     const deleteIcon = buildDeleteIcon(watchedState, rssSource);
     notificationWrapper.appendChild(deleteIcon);
@@ -336,10 +333,8 @@ const buildRssSourceCard = (watchedState, rssSource) => {
 
   card.addEventListener('mouseleave', (e) => {
     e.preventDefault();
-    if (!card.classList.contains('active')) {
-      card.classList.replace('shadow-sm', 'shadow');
-    }
-    card.style.cursor = null;
+    card.classList.replace('shadow', 'shadow-sm');
+    card.style.cursor = 'grab';
     const deleteIcon = document.querySelector('.delete-icon');
     deleteIcon.remove();
   });
@@ -350,11 +345,6 @@ const buildRssSourceCard = (watchedState, rssSource) => {
     watchedState.activeSourceId = rssSource.id;
     /* eslint-enable  no-param-reassign */
   });
-
-  if (watchedState.rssSources.length === 1) {
-    card.classList.add('active');
-    card.classList.replace('shadow', 'shadow-sm');
-  }
 
   return card;
 };
