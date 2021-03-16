@@ -1,8 +1,9 @@
 import * as yup from 'yup';
+import i18next from 'i18next';
 import axios from 'axios';
 import _ from 'lodash';
+import resources from './locales/index.js';
 
-import initI18Next from './i18nextInit.js';
 import initView from './view.js';
 import parseRss from './parser.js';
 import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
@@ -64,31 +65,20 @@ const validate = (urlList, url) => {
   }
 };
 
-export default () => {
-  initI18Next();
-  setValidationLocale();
+const initI18NextInstance = (lng) => {
+  const i18nextInstance = i18next.createInstance();
+  return i18nextInstance.init({
+    lng,
+    resources,
+  });
+};
 
-  const state = {
-    form: {
-      valid: false,
-      processState: 'filling',
-      fields: {
-        input: '',
-      },
-      error: null,
-    },
-    rssSources: [],
-    activeSourceId: null,
-    posts: [],
-    readPostIDs: [],
-    language: 'en',
-  };
-
+const runApp = (state, i18n) => {
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
   const elements = { submit, input, form };
-  const watchedState = initView(state, elements);
+  const watchedState = initView(state, elements, i18n);
   const changeLangBtns = document.querySelectorAll('[name="change-language"]');
 
   changeLangBtns.forEach((btn) => {
@@ -103,7 +93,9 @@ export default () => {
     e.preventDefault();
     const rssLink = e.target.value;
     watchedState.form.fields.input = rssLink;
-    const existingRssLinks = watchedState.rssSources.map((rssSource) => rssSource.link);
+    const existingRssLinks = watchedState.rssSources.map(
+      (rssSource) => rssSource.link,
+    );
     const error = validate(existingRssLinks, rssLink);
     watchedState.form.valid = !error;
     watchedState.form.error = error;
@@ -155,5 +147,33 @@ export default () => {
         watchedState.form.processState = 'failed';
         watchedState.error = err;
       });
+  });
+};
+
+export default () => {
+  setValidationLocale();
+  const languages = ['en', 'ru'];
+  const promises = languages.map(initI18NextInstance);
+  return Promise.all(promises).then((i18nInstaces) => {
+    const i18n = _.zipObject(languages, i18nInstaces);
+    const initialTranslateInstance = i18n.en;
+    i18n.t = initialTranslateInstance;
+
+    const state = {
+      form: {
+        valid: false,
+        processState: 'filling',
+        fields: {
+          input: '',
+        },
+        error: null,
+      },
+      rssSources: [],
+      activeSourceId: null,
+      posts: [],
+      readPostIDs: [],
+      language: 'en',
+    };
+    runApp(state, i18n);
   });
 };
