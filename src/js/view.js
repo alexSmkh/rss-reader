@@ -49,7 +49,9 @@ const hideBtnSpinner = (btn) => {
 };
 
 const getNumberOfUnreadPosts = (watchedState, rssSourceId) => {
-  const posts = watchedState.posts.filter((post) => post.sourceId === rssSourceId);
+  const posts = watchedState.posts.filter(
+    (post) => post.sourceId === rssSourceId,
+  );
   const unreadPosts = _.difference(posts, watchedState.readPostIDs);
   return unreadPosts.length;
 };
@@ -286,32 +288,6 @@ const buildPostCard = (watchedState, post) => {
   return card;
 };
 
-const buildPostList = (watchedState) => {
-  const postListContainer = document.createElement('div');
-  postListContainer.classList.add(
-    'col-md-6',
-    'col-lg-7',
-    'col-xl-8',
-    'pr-4',
-    'border-left',
-  );
-
-  const overflowContainer = document.createElement('div');
-  overflowContainer.classList.add('overflow-auto');
-  overflowContainer.style.maxHeight = '850px';
-  overflowContainer.setAttribute('name', 'overflow-post-list');
-
-  const posts = watchedState.posts.filter(
-    (post) => watchedState.activeSourceId === post.sourceId,
-  );
-  posts.forEach(
-    (post) => overflowContainer.appendChild(buildPostCard(watchedState, post)),
-  );
-
-  postListContainer.appendChild(overflowContainer);
-  return postListContainer;
-};
-
 const buildRssSourceCard = (watchedState, rssSource) => {
   const card = document.createElement('div');
   card.classList.add('card', 'shadow', 'mb-2');
@@ -394,13 +370,58 @@ const buildRssSourceCard = (watchedState, rssSource) => {
     /* eslint-enable  no-param-reassign */
   });
 
-  if (watchedState.activeSourceId === rssSource.id) {
+  if (watchedState.rssSources.length === 1) {
     card.classList.add('active');
     card.classList.replace('shadow', 'shadow-sm');
   }
 
   return card;
 };
+
+const buildPostListSection = (postList) => {
+  const postListContainer = document.createElement('div');
+  postListContainer.classList.add(
+    'col-md-6',
+    'col-lg-7',
+    'col-xl-8',
+    'pr-4',
+    'border-left',
+  );
+
+  const overflowContainer = document.createElement('div');
+  overflowContainer.classList.add('overflow-auto');
+  overflowContainer.style.maxHeight = '850px';
+  overflowContainer.setAttribute('name', 'overflow-post-list');
+  postList.forEach((post) => overflowContainer.appendChild(post));
+  postListContainer.appendChild(overflowContainer);
+  return postListContainer;
+};
+
+const buildRssListSection = (rssList) => {
+  const rssListSection = document.createElement('div');
+  rssListSection.classList.add('col-md-6', 'col-lg-5', 'col-xl-4');
+  rssListSection.setAttribute('name', 'rss-source-list');
+
+  const overflowContainer = document.createElement('div');
+  overflowContainer.classList.add('overflow-auto');
+  overflowContainer.style.maxHeight = '850px';
+  rssList.forEach((rss) => overflowContainer.appendChild(rss));
+  rssListSection.appendChild(overflowContainer);
+  return rssListSection;
+};
+
+const buildPostList = (watchedState) => (
+  watchedState.posts
+    .filter((post) => watchedState.activeSourceId === post.sourceId)
+    .map((post) => buildPostCard(watchedState, post))
+);
+
+const buildRssList = (watchedState) => (
+  watchedState.rssSources.map((rssSource) => buildRssSourceCard(
+    watchedState,
+    rssSource,
+  ))
+);
 
 const renderStartPage = () => {
   const rssContent = document.querySelector('[name="rss-content"]');
@@ -427,21 +448,63 @@ const renderStartPage = () => {
   rssContent.appendChild(container);
 };
 
-const buildRssList = (watchedState) => {
-  const rssList = document.createElement('div');
-  rssList.classList.add('col-md-6', 'col-lg-5', 'col-xl-4');
-  rssList.setAttribute('name', 'rss-source-list');
+const renderRssContent = (watchedState) => {
+  if (!watchedState.activeSourceId) {
+    renderStartPage();
+    return;
+  }
 
-  const overflowContainer = document.createElement('div');
-  overflowContainer.classList.add('overflow-auto');
-  overflowContainer.style.maxHeight = '850px';
+  const rssContent = document.querySelector('[name="rss-content"]');
 
-  watchedState.rssSources.forEach((rssSource) => {
-    overflowContainer.appendChild(buildRssSourceCard(watchedState, rssSource));
-  });
+  const rssList = buildRssList(watchedState);
+  const rssListSection = buildRssListSection(rssList);
 
-  rssList.appendChild(overflowContainer);
-  return rssList;
+  const postList = buildPostList(watchedState);
+  const postListSection = buildPostListSection(postList);
+
+  rssContent.innerHTML = '';
+  rssContent.appendChild(rssListSection);
+  rssContent.appendChild(postListSection);
+};
+
+const updateNotificationContainerForPostList = (
+  notificationContainer,
+  numberOfLastUpdates,
+) => {
+  const badge = notificationContainer.querySelector('.badge');
+  const numberOfNewPosts = parseInt(badge.textContent, 10) + numberOfLastUpdates;
+  badge.textContent = numberOfNewPosts;
+
+  const afterBadgeContent = badge.nextSibling;
+  afterBadgeContent.textContent = i18nInstance.t(
+    'notificationForPostList.afterBadge.after',
+    { count: numberOfNewPosts },
+  );
+  afterBadgeContent.setAttribute('data-number-for-translate', numberOfNewPosts);
+};
+
+const renderNotificationBadgeForRssList = (
+  watchedState,
+  rssSourceId,
+  numberOfNewPosts,
+) => {
+  const rssSourceList = document.querySelector('[name="rss-source-list"]');
+  const rssDOMElement = rssSourceList.querySelector(
+    `[data-source-id="${rssSourceId}"]`,
+  );
+  let notificationBadge = rssDOMElement.querySelector('span.badge');
+  if (!notificationBadge) {
+    const numberOfUnreadPosts = getNumberOfUnreadPosts(
+      watchedState,
+      rssSourceId,
+    );
+    notificationBadge = buildNotificationBadge(numberOfUnreadPosts);
+    const badgeWrapper = rssDOMElement.querySelector('.notificatonWrapper');
+    badgeWrapper.prepend(notificationBadge);
+    return;
+  }
+  const unreadPostsNumber = parseInt(notificationBadge.textContent, 10);
+  notificationBadge.textContent = unreadPostsNumber + numberOfNewPosts;
 };
 
 const buildNotificationContainerForPostList = (
@@ -470,7 +533,9 @@ const buildNotificationContainerForPostList = (
     'data-translation-key',
     'notificationForPostList.beforeBadge',
   );
-  textBeforeBadge.textContent = i18nInstance.t('notificationForPostList.beforeBadge');
+  textBeforeBadge.textContent = i18nInstance.t(
+    'notificationForPostList.beforeBadge',
+  );
 
   const textAfterBadge = document.createElement('span');
   textAfterBadge.setAttribute(
@@ -500,48 +565,13 @@ const buildNotificationContainerForPostList = (
       (post) => watchedState.activeSourceId === post.sourceId,
     );
     overflowContainer.innerHTML = '';
-    posts.forEach(
-      (post) => overflowContainer.appendChild(
-        buildPostCard(watchedState, post),
-      ),
-    );
+    posts.forEach((post) => overflowContainer.appendChild(
+      buildPostCard(watchedState, post),
+    ));
     container.remove();
   });
 
   return container;
-};
-
-const updateNotificationContainerForPostList = (
-  notificationContainer,
-  numberOfLastUpdates,
-) => {
-  const badge = notificationContainer.querySelector('.badge');
-  const numberOfNewPosts = parseInt(badge.textContent, 10) + numberOfLastUpdates;
-  badge.textContent = numberOfNewPosts;
-
-  const afterBadgeContent = badge.nextSibling;
-  afterBadgeContent.textContent = i18nInstance.t(
-    'notificationForPostList.afterBadge.after',
-    { count: numberOfNewPosts },
-  );
-  afterBadgeContent.setAttribute('data-number-for-translate', numberOfNewPosts);
-};
-
-const renderNotificationBadgeForRssList = (watchedState, rssSourceId, numberOfNewPosts) => {
-  const rssSourceList = document.querySelector('[name="rss-source-list"]');
-  const rssDOMElement = rssSourceList.querySelector(
-    `[data-source-id="${rssSourceId}"]`,
-  );
-  let notificationBadge = rssDOMElement.querySelector('span.badge');
-  if (!notificationBadge) {
-    const numberOfUnreadPosts = getNumberOfUnreadPosts(watchedState, rssSourceId);
-    notificationBadge = buildNotificationBadge(numberOfUnreadPosts);
-    const badgeWrapper = rssDOMElement.querySelector('.notificatonWrapper');
-    badgeWrapper.prepend(notificationBadge);
-    return;
-  }
-  const unreadPostsNumber = parseInt(notificationBadge.textContent, 10);
-  notificationBadge.textContent = unreadPostsNumber + numberOfNewPosts;
 };
 
 const renderNotificationContainerForPostList = (
@@ -582,21 +612,6 @@ const renderUpdates = (watchedState, currentPosts, previousPosts) => {
     sourceId,
     numberOfNewPosts,
   );
-};
-
-const renderRssContent = (watchedState) => {
-  if (watchedState.rssSources.length === 0) {
-    renderStartPage();
-    return;
-  }
-
-  const rssContent = document.querySelector('[name="rss-content"]');
-  const rssList = buildRssList(watchedState);
-  const postList = buildPostList(watchedState);
-
-  rssContent.innerHTML = '';
-  rssContent.appendChild(rssList);
-  rssContent.appendChild(postList);
 };
 
 const renderSucceedFeedback = (elemets) => {
