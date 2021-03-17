@@ -80,7 +80,6 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
     const postsIDsOfRssSourceTarget = watchedState.posts
       .filter((post) => post.sourceId === rssSourceOfTargetElement.id)
       .map((post) => post.id);
-    // const readPostIDs = _.clone(watchedState.readPostIDs);
     watchedState.readPostIDs = new Set(
       _.difference(
         watchedState.readPostIDs,
@@ -95,12 +94,11 @@ const buildDeleteIcon = (watchedState, rssSourceOfTargetElement) => {
     const updatedPosts = watchedState.posts.filter(
       (post) => post.sourceId !== rssSourceOfTargetElement.id,
     );
-    watchedState.posts = updatedPosts;
 
+    watchedState.posts = updatedPosts;
     if (updatedRssSources.length === 0) {
       watchedState.activeSourceId = null;
-      watchedState.checkingUpdates = false;
-      watchedState.rssSources = updatedRssSources;
+      watchedState.rssSources = [];
       return;
     }
 
@@ -349,38 +347,6 @@ const buildRssSourceCard = (watchedState, rssSource) => {
   return card;
 };
 
-const buildPostListSection = (postList) => {
-  const postListContainer = document.createElement('div');
-  postListContainer.classList.add(
-    'col-md-6',
-    'col-lg-7',
-    'col-xl-8',
-    'pr-4',
-    'border-left',
-  );
-
-  const overflowContainer = document.createElement('div');
-  overflowContainer.classList.add('overflow-auto');
-  overflowContainer.style.maxHeight = '850px';
-  overflowContainer.setAttribute('name', 'overflow-post-list');
-  postList.forEach((post) => overflowContainer.appendChild(post));
-  postListContainer.appendChild(overflowContainer);
-  return postListContainer;
-};
-
-const buildRssListSection = (rssList) => {
-  const rssListSection = document.createElement('div');
-  rssListSection.classList.add('col-md-6', 'col-lg-5', 'col-xl-4');
-  rssListSection.setAttribute('name', 'rss-source-list');
-
-  const overflowContainer = document.createElement('div');
-  overflowContainer.classList.add('overflow-auto');
-  overflowContainer.style.maxHeight = '850px';
-  rssList.forEach((rss) => overflowContainer.appendChild(rss));
-  rssListSection.appendChild(overflowContainer);
-  return rssListSection;
-};
-
 const buildPostList = (watchedState, i18n) => (
   watchedState.posts
     .filter((post) => watchedState.activeSourceId === post.sourceId)
@@ -394,7 +360,7 @@ const buildRssList = (watchedState) => (
   ))
 );
 
-const renderStartPage = () => {
+const renderStartPage = (i18n) => {
   const rssContent = document.querySelector('[name="rss-content"]');
   const container = document.createElement('div');
   container.classList.add(
@@ -411,7 +377,7 @@ const renderStartPage = () => {
 
   const p = document.createElement('p');
   p.classList.add('h3', 'mb-2');
-  p.textContent = 'Which sources would you like to follow?';
+  p.textContent = i18n.t('startPageContent.title');
 
   container.appendChild(img);
   container.appendChild(p);
@@ -419,23 +385,26 @@ const renderStartPage = () => {
   rssContent.appendChild(container);
 };
 
-const renderRssContent = (watchedState, i18n) => {
+const renderRssContent = (watchedState, i18n, elements) => {
   if (!watchedState.activeSourceId) {
-    renderStartPage();
+    renderStartPage(i18n);
     return;
   }
 
+  const { postListContainer, postListOverflowContainer } = elements.postList;
+  const { rssListContainer, rssListOverflowContainer } = elements.rssList;
+
   const rssContent = document.querySelector('[name="rss-content"]');
-
   const rssList = buildRssList(watchedState);
-  const rssListSection = buildRssListSection(rssList);
-
   const postList = buildPostList(watchedState, i18n);
-  const postListSection = buildPostListSection(postList);
+  postListOverflowContainer.innerHTML = '';
+  rssListOverflowContainer.innerHTML = '';
+  postList.forEach((post) => postListOverflowContainer.appendChild(post));
+  rssList.forEach((rss) => rssListOverflowContainer.appendChild(rss));
 
   rssContent.innerHTML = '';
-  rssContent.appendChild(rssListSection);
-  rssContent.appendChild(postListSection);
+  rssContent.appendChild(rssListContainer);
+  rssContent.appendChild(postListContainer);
 };
 
 const updateNotificationContainerForPostList = (
@@ -484,6 +453,7 @@ const buildNotificationContainerForPostList = (
   watchedState,
   numberOfNewPosts,
   i18n,
+  elements,
 ) => {
   const container = document.createElement('div');
   container.classList.add(
@@ -530,7 +500,7 @@ const buildNotificationContainerForPostList = (
   container.appendChild(textAfterBadge);
 
   container.addEventListener('click', () => {
-    renderRssContent(watchedState, i18n);
+    renderRssContent(watchedState, i18n, elements);
   });
 
   return container;
@@ -541,9 +511,10 @@ const renderNotificationContainerForPostList = (
   rssSourceId,
   numberOfNewPosts,
   i18n,
+  elements,
 ) => {
+  const { postList: { postListOverflowContainer } } = elements;
   if (rssSourceId === watchedState.activeSourceId) {
-    const postList = document.querySelector('[name="overflow-post-list"]');
     let notificationContainer = document.querySelector(
       '[name="notifications-for-post-list"]',
     );
@@ -552,6 +523,7 @@ const renderNotificationContainerForPostList = (
         watchedState,
         numberOfNewPosts,
         i18n,
+        elements,
       );
     } else {
       updateNotificationContainerForPostList(
@@ -560,11 +532,11 @@ const renderNotificationContainerForPostList = (
         i18n,
       );
     }
-    postList.prepend(notificationContainer);
+    postListOverflowContainer.prepend(notificationContainer);
   }
 };
 
-const renderUpdates = (watchedState, currentPosts, previousPosts, i18n) => {
+const renderUpdates = (watchedState, currentPosts, previousPosts, i18n, elements) => {
   if (previousPosts.length > currentPosts.length) return;
   const newPosts = _.difference(currentPosts, previousPosts);
   if (newPosts.length === 0) return;
@@ -582,6 +554,7 @@ const renderUpdates = (watchedState, currentPosts, previousPosts, i18n) => {
     sourceId,
     numberOfNewPosts,
     i18n,
+    elements,
   );
 };
 
@@ -707,10 +680,12 @@ export default (state, elements, i18n) => {
         renderValidationErrors(currentValue, elements, i18n);
         break;
       case 'rssSources':
-        renderRssContent(watchedState, i18n);
+        renderRssContent(watchedState, i18n, elements);
         break;
       case 'activeSourceId':
-        renderRssContent(watchedState, i18n);
+        if (prevValue) {
+          renderRssContent(watchedState, i18n, elements);
+        }
         break;
       case 'language':
         changeLanguage(currentValue, i18n);
@@ -719,7 +694,7 @@ export default (state, elements, i18n) => {
         renderErrorAlert(currentValue);
         break;
       case 'posts':
-        renderUpdates(watchedState, currentValue, prevValue, i18n);
+        renderUpdates(watchedState, currentValue, prevValue, i18n, elements);
         break;
       default:
         break;

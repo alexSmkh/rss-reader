@@ -7,6 +7,7 @@ import resources from './locales/index.js';
 import initView from './view.js';
 import parseRss from './parser.js';
 import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
+import { buildPostListContainer, buildRssListContainer } from './components.js';
 
 const checkUpdates = (watchedState) => {
   const timeoutDelay = 5000;
@@ -73,13 +74,28 @@ const initI18NextInstance = (lng) => {
   });
 };
 
-const runApp = (state, i18n) => {
+const initElements = () => {
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
-  const elements = { submit, input, form };
-  const watchedState = initView(state, elements, i18n);
   const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+  const postList = buildPostListContainer();
+  const rssList = buildRssListContainer();
+  return {
+    submit,
+    input,
+    form,
+    changeLangBtns,
+    postList,
+    rssList,
+  };
+};
+
+const runApp = (state, i18n) => {
+  const elements = initElements();
+  // console.log(elements);
+  const watchedState = initView(state, elements, i18n);
+  const { input, form, changeLangBtns } = elements;
 
   changeLangBtns.forEach((btn) => {
     btn.addEventListener('click', (e) => {
@@ -122,6 +138,7 @@ const runApp = (state, i18n) => {
         if (!watchedState.activeSourceId) {
           watchedState.activeSourceId = newSource.id;
         }
+
         const postsOfNewSource = parsedRss.posts.map((post) => {
           const id = _.uniqueId();
           return {
