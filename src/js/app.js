@@ -4,8 +4,12 @@ import resources from './locales/index.js';
 
 import initView from './view.js';
 import { buildPostListContainer, buildRssListContainer } from './components.js';
-import { handleFormInput, handleFormSubmit } from './handlers.js';
 import { setValidationLocale } from './validation.js';
+import {
+  handleFormInput,
+  handleFormSubmit,
+  handleSwitchLanguage,
+} from './handlers.js';
 
 const initI18NextInstance = (lng) => {
   const i18nextInstance = i18next.createInstance();
@@ -19,14 +23,17 @@ const initDOMElements = () => {
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
-  const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+  // const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+  const languageSwitchingBtnsContainer = document.querySelector(
+    '[data-toggle="langs"]',
+  ); 
   const postList = buildPostListContainer();
   const rssList = buildRssListContainer();
   return {
     submit,
     input,
     form,
-    changeLangBtns,
+    languageSwitchingBtnsContainer,
     postList,
     rssList,
   };
@@ -35,16 +42,12 @@ const initDOMElements = () => {
 const runApp = (state, i18n) => {
   const elements = initDOMElements();
   const watchedState = initView(state, elements, i18n);
-  const { input, form, changeLangBtns } = elements;
+  const { input, form, languageSwitchingBtnsContainer } = elements;
 
-  changeLangBtns.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const lang = e.target.getAttribute('data-lang');
-      if (lang === watchedState.language) return;
-      watchedState.language = lang;
-    });
-  });
-
+  languageSwitchingBtnsContainer.addEventListener(
+    'click',
+    handleSwitchLanguage(watchedState),
+  );
   input.addEventListener('input', handleFormInput(watchedState));
   form.addEventListener('submit', handleFormSubmit(watchedState, elements));
 };

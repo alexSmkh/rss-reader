@@ -110,3 +110,11 @@ export const handleFormSubmit = (watchedState) => (e) => {
       }
     });
 };
+
+export const handleSwitchLanguage = (watchedState) => (e) => {
+  const languageToSwitch = e.target.getAttribute('data-lang');
+  if (languageToSwitch === watchedState.language) return;
+  /* eslint-disable  no-param-reassign */
+  watchedState.language = languageToSwitch;
+  /* eslint-enable  no-param-reassign */
+};
