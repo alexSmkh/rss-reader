@@ -180,7 +180,7 @@ const buildNotificationBadgeCounter = (numberOfUnreadPosts) => {
 
 const buildPostCard = (watchedState, post, i18n) => {
   const card = document.createElement('div');
-  card.classList.add('card', 'shadow', 'mb-3');
+  card.classList.add('card', 'shadow-sm', 'mb-3');
   card.setAttribute('data-post-id', post.id);
 
   const cardHeader = document.createElement('div');
@@ -222,14 +222,14 @@ const buildPostCard = (watchedState, post, i18n) => {
 
   card.addEventListener('mouseenter', (e) => {
     e.preventDefault();
-    card.classList.replace('shadow', 'shadow-sm');
+    card.classList.replace('shadow-sm', 'shadow');
     card.style.transition = 'box-shadow .5s';
     card.style.cursor = 'pointer';
   });
 
   card.addEventListener('mouseleave', (e) => {
     e.preventDefault();
-    card.classList.replace('shadow-sm', 'shadow');
+    card.classList.replace('shadow', 'shadow-sm');
     card.style.transition = 'box-shadow .5s';
     card.style.cursor = null;
   });
