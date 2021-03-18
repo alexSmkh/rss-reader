@@ -6,6 +6,7 @@ import { wrapUrlInCorsProxy, normalizeURL } from './utils.js';
 import { validate } from './validation.js';
 
 const checkUpdates = (watchedState) => {
+  if (!watchedState.isUpdateProcessRunning) return;
   const timeoutDelay = 5000;
   const promises = watchedState.rssSources.map((rssSource) => {
     const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
@@ -46,6 +47,10 @@ const checkUpdates = (watchedState) => {
         () => {
           if (watchedState.rssSources.length > 0) {
             checkUpdates(watchedState);
+          } else {
+            /* eslint-disable  no-param-reassign */
+            watchedState.isUpdateProcessRunning = false;
+            /* eslint-enable  no-param-reassign */
           }
         },
         timeoutDelay,
@@ -110,7 +115,10 @@ export const handleFormSubmit = (watchedState, event) => {
       watchedState.rssSources.push(newSource);
       setTimeout(
         () => {
-          if (watchedState.rssSources.length > 0) {
+          if (!watchedState.isUpdateProcessRunning) {
+            /* eslint-disable  no-param-reassign */
+            watchedState.isUpdateProcessRunning = true;
+            /* eslint-enable  no-param-reassign */
             checkUpdates(watchedState);
           }
         },
@@ -160,6 +168,7 @@ const deleteRssSource = (watchedState, rssSourceIdForDelete) => {
   watchedState.posts = updatedPosts;
   if (updatedRssSources.length === 0) {
     watchedState.activeSourceId = null;
+    watchedState.isUpdateProcessRunning = false;
     watchedState.rssSources = [];
     return;
   }

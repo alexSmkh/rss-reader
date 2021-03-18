@@ -88,6 +88,7 @@ export default () => {
       posts: [],
       readPostIDs: new Set(),
       language: defaultLanguage,
+      isUpdateProcessRunning: false,
     };
     runApp(state, i18n);
   });
