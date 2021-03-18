@@ -9,6 +9,7 @@ import {
   handleFormInput,
   handleFormSubmit,
   handleSwitchLanguage,
+  handleClickOnRssList,
 } from './handlers.js';
 
 const initI18NextInstance = (lng) => {
@@ -23,10 +24,9 @@ const initDOMElements = () => {
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
-  // const changeLangBtns = document.querySelectorAll('[name="change-language"]');
   const languageSwitchingBtnsContainer = document.querySelector(
     '[data-toggle="langs"]',
-  ); 
+  );
   const postList = buildPostListContainer();
   const rssList = buildRssListContainer();
   return {
@@ -42,14 +42,24 @@ const initDOMElements = () => {
 const runApp = (state, i18n) => {
   const elements = initDOMElements();
   const watchedState = initView(state, elements, i18n);
-  const { input, form, languageSwitchingBtnsContainer } = elements;
+  const {
+    input,
+    form,
+    languageSwitchingBtnsContainer,
+    rssList,
+  } = elements;
+  const { rssListOverflowContainer } = rssList;
 
   languageSwitchingBtnsContainer.addEventListener(
     'click',
     handleSwitchLanguage(watchedState),
   );
+  rssListOverflowContainer.addEventListener(
+    'click',
+    handleClickOnRssList(watchedState),
+  );
   input.addEventListener('input', handleFormInput(watchedState));
-  form.addEventListener('submit', handleFormSubmit(watchedState, elements));
+  form.addEventListener('submit', (e) => handleFormSubmit(watchedState, e));
 };
 
 export default () => {
