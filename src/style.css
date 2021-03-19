@@ -2,10 +2,6 @@
   border-right-width: 5px;
 }
 
-[name="rss-source-card"] {
-  
-}
-
 @media (max-width: 590px) {
   [name='header-title'] {
     font-size: x-large;

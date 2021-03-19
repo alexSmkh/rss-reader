@@ -3,7 +3,50 @@ import {
   handleMouseLeaveEventOnRssCard,
   handleMouseoverOnDeleteIcon,
   handleMouseoutOnDeleteIcon,
+  handleMouseEnterEventOnCard,
+  handleMouseLeaveEventOnCard,
+  handleClosingToast,
 } from './handlers.js';
+
+export const buildToastForShowingErrors = (title, description) => {
+  const toast = document.createElement('div');
+  toast.classList.add('toast', 'show');
+  toast.setAttribute('role', 'alert');
+  toast.setAttribute('aria-live', 'assertive');
+  toast.setAttribute('aria-atomic', 'true');
+  toast.style.position = 'absolute';
+  toast.style.top = '10px';
+  toast.style.left = '10px';
+  toast.style.zIndex = '1000';
+
+  const toastHeader = document.createElement('div');
+  toastHeader.classList.add('toast-header');
+
+  const toastHeaderTitle = document.createElement('strong');
+  toastHeaderTitle.classList.add('mr-auto');
+  toastHeaderTitle.textContent = title;
+
+  const button = document.createElement('button');
+  button.setAttribute('type', 'button');
+  button.classList.add('close');
+  button.setAttribute('aria-label', 'Close');
+
+  const span = document.createElement('span');
+  span.setAttribute('aria-hidden', 'true');
+  span.innerHTML = '&times;';
+
+  const toastBody = document.createElement('div');
+  toastBody.classList.add('toast-body');
+  toastBody.textContent = description;
+
+  button.appendChild(span);
+  toastHeader.appendChild(toastHeaderTitle);
+  toastHeader.appendChild(button);
+  toast.appendChild(toastHeader);
+  toast.appendChild(toastBody);
+  toast.addEventListener('click', handleClosingToast);
+  return toast;
+};
 
 export const buildRssListContainer = () => {
   const rssListContainer = document.createElement('div');
@@ -48,19 +91,157 @@ export const buildDeleteIcon = (rssSourceId) => {
   return deleteIcon;
 };
 
-const buildNotificationBadgeCounter = (numberOfUnreadPosts) => {
-  const notificationBadge = document.createElement('span');
-  notificationBadge.classList.add(
+const buildBadge = () => {
+  const badge = document.createElement('span');
+  badge.classList.add(
     'badge',
     'badge-danger',
     'badge-pill',
-    'mr-1',
     'd-flex',
     'align-items-center',
   );
-  notificationBadge.textContent = numberOfUnreadPosts;
-  notificationBadge.style.maxHeight = '22px';
-  return notificationBadge;
+  badge.setAttribute('name', 'badge');
+  badge.style.maxHeight = '22px';
+  return badge;
+};
+
+export const buildBadgeForShowingNumberOfUnreadPosts = (numberOfUnreadPosts) => {
+  const badge = buildBadge();
+  badge.textContent = numberOfUnreadPosts;
+  badge.style.maxHeight = '22px';
+  return badge;
+};
+
+export const buildNotificationContainerForPostList = (
+  numberOfNewPosts,
+  i18n,
+) => {
+  const container = document.createElement('div');
+  container.classList.add(
+    'mt-0',
+    'mb-2',
+    'rounded',
+    'py-1',
+    'bg-secondary',
+    // 'text-center',
+    'd-flex',
+    'justify-content-center',
+    'align-items-center',
+    'text-light',
+    'shadow',
+  );
+  container.setAttribute('name', 'notifications-for-post-list');
+  container.style.position = 'sticky';
+  container.style.top = '0px';
+  container.style.zIndex = '1000';
+  container.style.cursor = 'pointer';
+
+  const textBeforeBadge = document.createElement('span');
+  textBeforeBadge.setAttribute(
+    'data-translation-key',
+    'notificationForPostList.beforeBadge',
+  );
+  textBeforeBadge.textContent = i18n.t('notificationForPostList.beforeBadge');
+
+  const textAfterBadge = document.createElement('span');
+  textAfterBadge.setAttribute(
+    'data-translation-key-plural',
+    'notificationForPostList.afterBadge.after',
+  );
+  textAfterBadge.setAttribute('data-number-for-translate', numberOfNewPosts);
+
+  textAfterBadge.textContent = i18n.t(
+    'notificationForPostList.afterBadge.after',
+    { count: numberOfNewPosts },
+  );
+
+  const badge = buildBadge();
+  badge.classList.add('mx-1');
+  badge.textContent = `${numberOfNewPosts}`;
+
+  container.appendChild(textBeforeBadge);
+  container.appendChild(badge);
+  container.appendChild(textAfterBadge);
+
+  return container;
+};
+
+const buildBadgeForUnreadPost = (i18n) => {
+  const badge = buildBadge();
+  badge.classList.add('mr-1');
+  badge.textContent = i18n.t('post.new');
+  badge.setAttribute('data-translation-key', 'post.new');
+  return badge;
+};
+
+const buildMarkAsReadLink = (postId, i18n) => {
+  const markAsReadLink = document.createElement('a');
+  markAsReadLink.setAttribute('href', '#');
+  markAsReadLink.textContent = i18n.t('post.markAsRead');
+  markAsReadLink.setAttribute('data-translation-key', 'post.markAsRead');
+  markAsReadLink.setAttribute('data-post-id', postId);
+  markAsReadLink.setAttribute('name', 'mark-as-read-link');
+  markAsReadLink.classList.add('text-muted', 'ml-2');
+  return markAsReadLink;
+};
+
+export const buildPostCard = (watchedState, title, description, postId, i18n) => {
+  const card = document.createElement('div');
+  card.classList.add('card', 'shadow-sm', 'mb-3');
+  card.setAttribute('data-post-card-id', postId);
+
+  const cardHeader = document.createElement('div');
+  cardHeader.classList.add(
+    'card-header',
+    'd-flex',
+    'justify-content-between',
+    'align-items-center',
+  );
+
+  const postTitle = document.createElement('h5');
+  postTitle.classList.add('font-weight-normal', 'mb-0');
+  postTitle.setAttribute('name', 'post-title');
+  postTitle.textContent = title;
+  cardHeader.appendChild(postTitle);
+  card.appendChild(cardHeader);
+
+  const cartBody = document.createElement('div');
+  cartBody.classList.add('card-body');
+
+  const postDescription = document.createElement('p');
+  postDescription.classList.add('card-text');
+  postDescription.textContent = `${description.slice(0, 100)} ...`;
+
+  const elementWrapper = document.createElement('div');
+  elementWrapper.classList.add('wrapper');
+
+  const previewBtn = document.createElement('button');
+  previewBtn.textContent = i18n.t('post.btn');
+  previewBtn.setAttribute('name', 'previewBtn');
+  previewBtn.setAttribute('data-post-id', postId);
+  previewBtn.setAttribute('type', 'button');
+  previewBtn.setAttribute('data-translation-key', 'post.btn');
+  previewBtn.setAttribute('data-toggle', 'modal');
+  previewBtn.setAttribute('data-target', '#preview-modal');
+  previewBtn.classList.add('btn', 'btn-secondary', 'mr-1');
+
+  elementWrapper.appendChild(previewBtn);
+  cartBody.appendChild(postDescription);
+  cartBody.appendChild(elementWrapper);
+  card.appendChild(cartBody);
+
+  card.addEventListener('mouseenter', handleMouseEnterEventOnCard);
+  card.addEventListener('mouseleave', handleMouseLeaveEventOnCard);
+
+  if (!watchedState.readPostIDs.has(postId)) {
+    postTitle.classList.replace('font-weight-normal', 'font-weight-bold');
+    const badgeForUnreadPost = buildBadgeForUnreadPost(i18n);
+    badgeForUnreadPost.classList.add('mr-1');
+    const markAsReadLink = buildMarkAsReadLink(postId, i18n);
+    cardHeader.appendChild(badgeForUnreadPost);
+    elementWrapper.appendChild(markAsReadLink);
+  }
+  return card;
 };
 
 export const buildRssSourceCard = (
@@ -92,10 +273,10 @@ export const buildRssSourceCard = (
   const deleteIcon = buildDeleteIcon(rssSourceId);
   deleteIcon.style.display = 'none';
 
-  const notificationWrapper = document.createElement('div');
-  notificationWrapper.style.minWidth = '100px';
-  notificationWrapper.classList.add(
-    'notificatonWrapper',
+  const badgeWrapper = document.createElement('div');
+  badgeWrapper.setAttribute('name', 'badge-wrapper');
+  badgeWrapper.style.minWidth = '100px';
+  badgeWrapper.classList.add(
     'd-flex',
     'justify-content-center',
     'align-items-center',
@@ -103,12 +284,12 @@ export const buildRssSourceCard = (
   );
 
   if (nubmerOfUnreadPosts) {
-    const notificationBadge = buildNotificationBadgeCounter(
+    const badgeForShowingNumberOfUnreadPosts = buildBadgeForShowingNumberOfUnreadPosts(
       nubmerOfUnreadPosts,
     );
-    notificationWrapper.appendChild(notificationBadge);
+    badgeWrapper.appendChild(badgeForShowingNumberOfUnreadPosts);
   }
-  notificationWrapper.appendChild(deleteIcon);
+  badgeWrapper.appendChild(deleteIcon);
 
   const cardBody = document.createElement('div');
   cardBody.classList.add('card-body', 'p-3');
@@ -119,7 +300,7 @@ export const buildRssSourceCard = (
 
   cardBody.appendChild(rssSourceDescription);
   cardHeader.appendChild(rssTitle);
-  cardHeader.appendChild(notificationWrapper);
+  cardHeader.appendChild(badgeWrapper);
   card.appendChild(cardHeader);
   card.appendChild(cardBody);
 

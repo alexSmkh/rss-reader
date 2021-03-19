@@ -10,6 +10,7 @@ import {
   handleFormSubmit,
   handleSwitchLanguage,
   handleClickOnRssList,
+  handleClickOnPostList,
 } from './handlers.js';
 
 const initI18NextInstance = (lng) => {
@@ -47,8 +48,10 @@ const runApp = (state, i18n) => {
     form,
     languageSwitchingBtnsContainer,
     rssList,
+    postList,
   } = elements;
   const { rssListOverflowContainer } = rssList;
+  const { postListOverflowContainer } = postList;
 
   languageSwitchingBtnsContainer.addEventListener(
     'click',
@@ -57,6 +60,10 @@ const runApp = (state, i18n) => {
   rssListOverflowContainer.addEventListener(
     'click',
     handleClickOnRssList(watchedState),
+  );
+  postListOverflowContainer.addEventListener(
+    'click',
+    handleClickOnPostList(watchedState),
   );
   input.addEventListener('input', handleFormInput(watchedState));
   form.addEventListener('submit', (e) => handleFormSubmit(watchedState, e));

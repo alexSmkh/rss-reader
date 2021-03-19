@@ -43,18 +43,15 @@ const checkUpdates = (watchedState) => {
       });
     })
     .finally(() => {
-      setTimeout(
-        () => {
-          if (watchedState.rssSources.length > 0) {
-            checkUpdates(watchedState);
-          } else {
-            /* eslint-disable  no-param-reassign */
-            watchedState.isUpdateProcessRunning = false;
-            /* eslint-enable  no-param-reassign */
-          }
-        },
-        timeoutDelay,
-      );
+      setTimeout(() => {
+        if (watchedState.rssSources.length > 0) {
+          checkUpdates(watchedState);
+        } else {
+          /* eslint-disable  no-param-reassign */
+          watchedState.isUpdateProcessRunning = false;
+          /* eslint-enable  no-param-reassign */
+        }
+      }, timeoutDelay);
     });
 };
 
@@ -113,17 +110,14 @@ export const handleFormSubmit = (watchedState, event) => {
 
       watchedState.posts.push(...postsOfNewSource);
       watchedState.rssSources.push(newSource);
-      setTimeout(
-        () => {
-          if (!watchedState.isUpdateProcessRunning) {
-            /* eslint-disable  no-param-reassign */
-            watchedState.isUpdateProcessRunning = true;
-            /* eslint-enable  no-param-reassign */
-            checkUpdates(watchedState);
-          }
-        },
-        5000,
-      );
+      setTimeout(() => {
+        if (!watchedState.isUpdateProcessRunning) {
+          /* eslint-disable  no-param-reassign */
+          watchedState.isUpdateProcessRunning = true;
+          /* eslint-enable  no-param-reassign */
+          checkUpdates(watchedState);
+        }
+      }, 5000);
     })
     .catch((err) => {
       if (err.message === 'parse error') {
@@ -188,6 +182,19 @@ const switchActiveRssSource = (watchedState, idOfCardClicked) => {
   /* eslint-enable  no-param-reassign */
 };
 
+const updateContentOfModalDialog = (title, description, link) => {
+  const modal = document.getElementById('preview-modal');
+
+  const modalTitle = modal.querySelector('.modal-title');
+  modalTitle.textContent = title;
+
+  const modalBodyContent = modal.querySelector('.modal-body > p');
+  modalBodyContent.textContent = description;
+
+  const openBtn = modal.querySelector('.modal-footer > a');
+  openBtn.setAttribute('href', link);
+};
+
 export const handleClickOnRssList = (watchedState) => (e) => {
   const targetElement = e.target;
   const elementName = targetElement.getAttribute('name');
@@ -203,6 +210,22 @@ export const handleClickOnRssList = (watchedState) => (e) => {
   switchActiveRssSource(watchedState, rssSourceId);
 };
 
+export const handleClickOnPostList = (watchedState) => (e) => {
+  const targetElement = e.target;
+  const targetElementName = targetElement.getAttribute('name');
+  if (targetElementName === 'previewBtn') {
+    const { postId } = targetElement.dataset;
+    const post = _.find(watchedState.posts, { id: postId });
+    const { title, description, link } = post;
+    updateContentOfModalDialog(title, description, link);
+
+    watchedState.readPostIDs.add(postId);
+  } else if (targetElementName === 'mark-as-read-link') {
+    const { postId } = targetElement.dataset;
+    watchedState.readPostIDs.add(postId);
+  }
+};
+
 export const handleMouseoverOnDeleteIcon = (e) => {
   const deleteIcon = e.target;
   deleteIcon.setAttribute('src', 'assets/images/x-circle-fill.svg');
@@ -213,33 +236,36 @@ export const handleMouseoutOnDeleteIcon = (e) => {
   deleteIcon.setAttribute('src', 'assets/images/x-circle.svg');
 };
 
-const handleMouseEnterEventOnCard = (card) => {
+export const handleMouseEnterEventOnCard = (e) => {
+  const card = e.target;
   card.classList.replace('shadow-sm', 'shadow');
-  /* eslint-disable  no-param-reassign */
   card.style.transition = 'box-shadow .5s';
   card.style.cursor = 'pointer';
   card.style.display = 'block';
-  /* eslint-enable  no-param-reassign */
 };
 
-const handleMouseLeaveEventOnCard = (card) => {
+export const handleMouseLeaveEventOnCard = (e) => {
+  const card = e.target;
   card.classList.replace('shadow', 'shadow-sm');
-  /* eslint-disable  no-param-reassign */
   card.style.cursor = 'grab';
   card.style.transition = 'box-shadow .5s';
-  /* eslint-enable  no-param-reassign */
 };
 
 export const handleMouseEnterEventOnRssCard = (e) => {
+  handleMouseEnterEventOnCard(e);
   const card = e.target;
-  handleMouseEnterEventOnCard(card);
   const deleteIcon = card.querySelector('[name="delete-icon"]');
   deleteIcon.style.display = 'block';
 };
 
 export const handleMouseLeaveEventOnRssCard = (e) => {
+  handleMouseLeaveEventOnCard(e);
   const card = e.target;
-  handleMouseLeaveEventOnCard(card);
   const deleteIcon = card.querySelector('[name="delete-icon"]');
   deleteIcon.style.display = 'none';
+};
+
+export const handleClosingToast = (e) => {
+  const toast = e.target;
+  toast.remove();
 };
