@@ -4,15 +4,14 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png"/>
-    <!-- <script src="style.bundle.js"></script> -->
     <title>Rss-reader</title>
   </head>
   <body>
-  <div class="modal fade" id="modal" tabindex="-1" aria-labelledby="modal" aria-hidden="true" style="display: none" role="dialog">
+  <div class="modal fade" id="preview-modal" tabindex="-1" aria-labelledby="modal" aria-hidden="true" role="dialog" aria-labelledby="preview-modal-label">
       <div class="modal-dialog modal-dialog-scrollable">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="exampleModalLabel"></h5>
+            <h5 class="modal-title"></h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
@@ -21,8 +20,8 @@
             <p></p>
           </div>
           <div class="modal-footer">
-            <button id="modal-close-btn" type="button" class="btn btn-secondary" data-dismiss="modal" data-translation-key="modal.closeBtn">Close</button>
-            <a href="#" class="btn btn-primary" data-open="modal"  data-translation-key="modal.openBtn" target="_blank">Open</a>
+            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-translation-key="modal.closeBtn">Close</button>
+            <a href="#" class="btn btn-primary" data-translation-key="modal.openBtn" target="_blank">Open</a>
           </div>
         </div>
       </div>
@@ -71,6 +70,5 @@
           <span class="mr-1">created by</span><a href="https://github.com/alexSmkh" target="_blank"><img src="/assets/images/github.svg" style="height: 25px"></a>
         </div>
     </footer>
-    <div class="modal-backdrop show" style="display: none" ></div>
   </body>
 </html>

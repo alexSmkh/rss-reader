@@ -1,183 +1,102 @@
-import * as yup from 'yup';
-import axios from 'axios';
+import i18next from 'i18next';
 import _ from 'lodash';
+import resources from './locales/index.js';
 
-import initI18Next from './i18nextInit.js';
 import initView from './view.js';
-import parseRss from './parser.js';
-import { normalizeURL, wrapUrlInCorsProxy } from './utils.js';
+import { buildPostListContainer, buildRssListContainer } from './components.js';
+import { setValidationLocale } from './validation.js';
+import {
+  handleFormInput,
+  handleFormSubmit,
+  handleSwitchLanguage,
+  handleClickOnRssList,
+  handleClickOnPostList,
+} from './handlers.js';
 
-const checkUpdates = (watchedState) => {
-  if (!watchedState.checkingUpdates) {
-    /* eslint-disable  no-param-reassign */
-    watchedState.checkingUpdates = false;
-    /* eslint-enable  no-param-reassign */
-    return;
-  }
-  const timeoutDelay = 5000;
-  const updatePromises = watchedState.rssSources.map((rssSource) => {
-    const proxyUrl = wrapUrlInCorsProxy(rssSource.link);
-    return axios
-      .get(proxyUrl)
-      .then((response) => {
-        const { posts: postsFromLastRequest } = parseRss(
-          response.data.contents,
-          'text/xml',
-        );
-        const newPostsFromLastRequest = _.differenceBy(
-          postsFromLastRequest,
-          watchedState.posts,
-          'link',
-        );
-        const newPosts = newPostsFromLastRequest.map((post) => ({
-          ...post,
-          id: _.uniqueId(),
-          sourceId: rssSource.id,
-        }));
-        return newPosts;
-      })
-      .catch();
-  });
-
-  Promise.allSettled(updatePromises)
-    .then((updates) => {
-      updates
-        .forEach((update) => {
-          if (update.status === 'rejected') return;
-          /* eslint-disable  no-param-reassign */
-          watchedState.posts.unshift(...update.value);
-          /* eslint-enable  no-param-reassign */
-        });
-    })
-    .finally(setTimeout(() => checkUpdates(watchedState), timeoutDelay));
-};
-
-const setValidationLocale = () => {
-  yup.setLocale({
-    string: {
-      url: 'errors.formValidation.url',
-      notOneOf: 'errors.formValidation.rssAlreadyExists',
-    },
-    mixed: {
-      required: 'errors.formValidation.required',
-    },
+const initI18NextInstance = (lng) => {
+  const i18nextInstance = i18next.createInstance();
+  return i18nextInstance.init({
+    lng,
+    resources,
   });
 };
 
-const validateRssLink = (rssSources, formFields) => {
-  const existingRssLinks = rssSources.map(
-    (rssSource) => rssSource.link,
-  );
-  const schema = yup.object().shape({
-    input: yup
-      .string()
-      .url()
-      .required()
-      .notOneOf(existingRssLinks),
-  });
-
-  try {
-    schema.validateSync(formFields);
-    return null;
-  } catch (e) {
-    return e.errors[0];
-  }
-};
-
-export default () => {
-  initI18Next();
-  setValidationLocale();
-
-  const state = {
-    form: {
-      valid: false,
-      processState: 'filling',
-      fields: {
-        input: '',
-      },
-      error: null,
-    },
-    rssSources: [],
-    activeSourceId: null,
-    posts: [],
-    readPostIDs: [],
-    language: 'en',
-    checkingUpdates: false,
-  };
-
+const initDOMElements = () => {
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
-  const elements = { submit, input, form };
-  const watchedState = initView(state, elements);
-  const changeLangBtns = document.querySelectorAll('[name="change-language"]');
+  const languageSwitchingBtnsContainer = document.querySelector(
+    '[data-toggle="langs"]',
+  );
+  const postList = buildPostListContainer();
+  const rssList = buildRssListContainer();
+  return {
+    submit,
+    input,
+    form,
+    languageSwitchingBtnsContainer,
+    postList,
+    rssList,
+  };
+};
 
-  changeLangBtns.forEach((btn) => {
-    btn.addEventListener('click', (e) => {
-      const lang = e.target.getAttribute('data-lang');
-      if (lang === watchedState.language) return;
-      watchedState.language = lang;
-    });
-  });
+const runApp = (state, i18n) => {
+  const elements = initDOMElements();
+  const watchedState = initView(state, elements, i18n);
+  const {
+    input,
+    form,
+    languageSwitchingBtnsContainer,
+    rssList,
+    postList,
+  } = elements;
+  const { rssListOverflowContainer } = rssList;
+  const { postListOverflowContainer } = postList;
 
-  input.addEventListener('input', (e) => {
-    e.preventDefault();
-    const rssLink = e.target.value;
-    watchedState.form.fields.input = rssLink;
-    const error = validateRssLink(watchedState.rssSources, watchedState.form.fields);
-    watchedState.form.valid = !error;
-    watchedState.form.error = error;
-  });
+  languageSwitchingBtnsContainer.addEventListener(
+    'click',
+    handleSwitchLanguage(watchedState),
+  );
+  rssListOverflowContainer.addEventListener(
+    'click',
+    handleClickOnRssList(watchedState),
+  );
+  postListOverflowContainer.addEventListener(
+    'click',
+    handleClickOnPostList(watchedState),
+  );
+  input.addEventListener('input', handleFormInput(watchedState));
+  form.addEventListener('submit', (e) => handleFormSubmit(watchedState, e));
+};
 
-  form.addEventListener('submit', (e) => {
-    e.preventDefault();
-    watchedState.form.processState = 'sending';
+export default () => {
+  setValidationLocale();
 
-    const data = new FormData(e.target);
-    const rssLink = normalizeURL(data.get('rss-link'));
-    const proxyUrl = wrapUrlInCorsProxy(rssLink);
-    axios
-      .get(proxyUrl)
-      .then((response) => {
-        const parsedRss = parseRss(response.data.contents, 'text/xml');
-        watchedState.form.fields.input = '';
-        watchedState.form.processState = 'filling';
-        const newSource = {
-          ...parsedRss.source,
-          id: _.uniqueId(),
-          link: rssLink,
-        };
-        if (!watchedState.activeSourceId) {
-          watchedState.activeSourceId = newSource.id;
-        }
-        const postsOfNewSource = parsedRss.posts.map((post) => {
-          const id = _.uniqueId();
-          return {
-            ...post,
-            sourceId: newSource.id,
-            id,
-          };
-        });
+  const defaultLanguage = 'en';
+  const languages = ['en', 'ru'];
 
-        return { newSource, postsOfNewSource };
-      })
-      .then(({ newSource, postsOfNewSource }) => {
-        watchedState.posts.push(...postsOfNewSource);
-        watchedState.rssSources.push(newSource);
-        if (!watchedState.checkingUpdates) {
-          watchedState.checkingUpdates = true;
-          setTimeout(() => checkUpdates(watchedState), 5000);
-        }
-      })
-      .catch((err) => {
-        if (err.message === 'parse error') {
-          watchedState.form.error = 'errors.isNotSupported';
-          watchedState.form.processState = 'failed';
-          watchedState.form.valid = false;
-          return;
-        }
-        watchedState.form.processState = 'failed';
-        watchedState.error = err;
-      });
+  const promises = languages.map(initI18NextInstance);
+  return Promise.all(promises).then((i18nInstaces) => {
+    const i18n = _.zipObject(languages, i18nInstaces);
+    const initialTranslateInstance = i18n[defaultLanguage];
+    i18n.t = initialTranslateInstance;
+
+    const state = {
+      form: {
+        valid: false,
+        processState: 'filling',
+        fields: {
+          input: '',
+        },
+        error: null,
+      },
+      rssSources: [],
+      activeSourceId: null,
+      posts: [],
+      readPostIDs: new Set(),
+      language: defaultLanguage,
+      isUpdateProcessRunning: false,
+    };
+    runApp(state, i18n);
   });
 };

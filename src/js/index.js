@@ -1,5 +1,6 @@
-import 'bootstrap/js/dist/util.js';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/js/dist/modal';
+
 import '../style.css';
 import app from './app.js';
 
