@@ -23,7 +23,8 @@ const getRssSourceData = (parsedRss) => {
   };
 };
 
-export default (rssContent, mimeType) => {
+export default (rssContent) => {
+  const mimeType = 'text/xml';
   const parser = new DOMParser();
   const content = parser.parseFromString(rssContent, mimeType);
   if (content.querySelector('parsererror')) {

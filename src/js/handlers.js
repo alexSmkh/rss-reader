@@ -15,7 +15,6 @@ const checkUpdates = (watchedState) => {
       .then((response) => {
         const { posts: postsFromLastRequest } = parseRss(
           response.data.contents,
-          'text/xml',
         );
         const newPostsFromLastRequest = _.differenceBy(
           postsFromLastRequest,
@@ -83,7 +82,7 @@ export const handleFormSubmit = (watchedState, event) => {
   axios
     .get(proxyUrl)
     .then((response) => {
-      const parsedRss = parseRss(response.data.contents, 'text/xml');
+      const parsedRss = parseRss(response.data.contents);
       /* eslint-disable  no-param-reassign */
       watchedState.form.fields.input = '';
       watchedState.form.processState = 'filling';
