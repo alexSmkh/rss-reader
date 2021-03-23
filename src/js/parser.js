@@ -1,3 +1,13 @@
+import { castArray } from "lodash-es";
+
+class RSSParsingError extends Error {
+  constructor(message = 'An error occurred while parsing the RSS') {
+    super(message);
+    this.name = 'RSSParsingError';
+    this.isRSSParsingError = true;
+  }
+}
+
 const getRssPostsData = (parsedRss) => {
   const items = parsedRss.querySelectorAll('item');
   const posts = [];
@@ -28,9 +38,13 @@ export default (rssContent) => {
   const parser = new DOMParser();
   const content = parser.parseFromString(rssContent, mimeType);
   if (content.querySelector('parsererror')) {
-    throw new Error('parse error');
+    throw new RSSParsingError();
   }
-  const source = getRssSourceData(content);
-  const posts = getRssPostsData(content);
-  return { source, posts };
+  try {
+    const source = getRssSourceData(content);
+    const posts = getRssPostsData(content);
+    return { source, posts };
+  } catch (error) {
+    throw new RSSParsingError(error.message);
+  }
 };

@@ -119,7 +119,7 @@ export const handleFormSubmit = (watchedState, event) => {
       }, 5000);
     })
     .catch((err) => {
-      if (err.message === 'parse error') {
+      if (err.isRSSParsingError) {
         /* eslint-disable  no-param-reassign */
         watchedState.form.error = 'errors.isNotSupported';
         watchedState.form.processState = 'failed';
