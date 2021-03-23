@@ -1,5 +1,4 @@
 import i18next from 'i18next';
-import _ from 'lodash';
 import resources from './locales/index.js';
 
 import initView from './view.js';
@@ -12,14 +11,6 @@ import {
   handleClickOnRssList,
   handleClickOnPostList,
 } from './handlers.js';
-
-const initI18NextInstance = (lng) => {
-  const i18nextInstance = i18next.createInstance();
-  return i18nextInstance.init({
-    lng,
-    resources,
-  });
-};
 
 const initDOMElements = () => {
   const submit = document.getElementById('add-content-btn');
@@ -69,34 +60,31 @@ const runApp = (state, i18n) => {
   form.addEventListener('submit', (e) => handleFormSubmit(watchedState, e));
 };
 
-export default () => {
+export default async () => {
   setValidationLocale();
 
   const defaultLanguage = 'en';
-  const languages = ['en', 'ru'];
-
-  const promises = languages.map(initI18NextInstance);
-  return Promise.all(promises).then((i18nInstaces) => {
-    const i18n = _.zipObject(languages, i18nInstaces);
-    const initialTranslateInstance = i18n[defaultLanguage];
-    i18n.t = initialTranslateInstance;
-
-    const state = {
-      form: {
-        valid: false,
-        processState: 'filling',
-        fields: {
-          input: '',
-        },
-        error: null,
-      },
-      rssSources: [],
-      activeSourceId: null,
-      posts: [],
-      readPostIDs: new Set(),
-      language: defaultLanguage,
-      isUpdateProcessRunning: false,
-    };
-    runApp(state, i18n);
+  const i18nInstance = i18next.createInstance();
+  i18nInstance.init({
+    lng: defaultLanguage,
+    resources,
   });
+
+  const state = {
+    form: {
+      valid: false,
+      processState: 'filling',
+      fields: {
+        input: '',
+      },
+      error: null,
+    },
+    rssSources: [],
+    activeSourceId: null,
+    posts: [],
+    readPostIDs: new Set(),
+    language: defaultLanguage,
+    isUpdateProcessRunning: false,
+  };
+  runApp(state, i18nInstance);
 };
