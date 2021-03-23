@@ -125,7 +125,7 @@ export const handleFormSubmit = (watchedState, event) => {
         watchedState.form.processState = 'failed';
         watchedState.form.valid = false;
       }
-      if (err.message === 'Network Error') {
+      if (err.isAxiosError) {
         watchedState.form.processState = 'failed';
         watchedState.error = err;
         /* eslint-enable  no-param-reassign */
