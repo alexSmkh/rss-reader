@@ -11,32 +11,34 @@ import {
 
 const changeLanguage = (language, i18n) => {
   /* eslint-disable  no-param-reassign */
-  i18n.t = i18n[language];
-  const btns = document.querySelectorAll('[name="change-language"]');
-  btns.forEach((btn) => btn.classList.toggle('active'));
+  i18n.changeLanguage(language)
+    .then((t) => {
+      const btns = document.querySelectorAll('[name="change-language"]');
+      btns.forEach((btn) => btn.classList.toggle('active'));
 
-  const elementsForTranslate = document.querySelectorAll(
-    '[data-translation-key]',
-  );
-  elementsForTranslate.forEach((element) => {
-    const { translationKey } = element.dataset;
-    element.textContent = i18n.t(translationKey);
-    /* eslint-enable  no-param-reassign */
-  });
+      const elementsForTranslate = document.querySelectorAll(
+        '[data-translation-key]',
+      );
+      elementsForTranslate.forEach((element) => {
+        const { translationKey } = element.dataset;
+        element.textContent = t(translationKey);
+        /* eslint-enable  no-param-reassign */
+      });
 
-  const rssInput = document.getElementById('rss-input');
-  rssInput.setAttribute('placeholder', i18n.t('header.form.placeholder'));
+      const rssInput = document.getElementById('rss-input');
+      rssInput.setAttribute('placeholder', t('header.form.placeholder'));
 
-  const elementsForTranslatePlural = document.querySelectorAll(
-    '[data-translation-key-plural]',
-  );
-  elementsForTranslatePlural.forEach((element) => {
-    const translationKey = element.dataset.translationKeyPlural;
-    const count = parseInt(element.dataset.numberForTranslate, 10);
-    /* eslint-disable  no-param-reassign */
-    element.textContent = i18n.t(translationKey, { count });
-    /* eslint-enable  no-param-reassign */
-  });
+      const elementsForTranslatePlural = document.querySelectorAll(
+        '[data-translation-key-plural]',
+      );
+      elementsForTranslatePlural.forEach((element) => {
+        const translationKey = element.dataset.translationKeyPlural;
+        const count = parseInt(element.dataset.numberForTranslate, 10);
+        /* eslint-disable  no-param-reassign */
+        element.textContent = t(translationKey, { count });
+        /* eslint-enable  no-param-reassign */
+      });
+    });
 };
 
 const showBtnSpinner = (btn, i18n) => {
