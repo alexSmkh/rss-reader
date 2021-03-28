@@ -212,7 +212,7 @@ export const handleClickOnRssList = (watchedState) => (e) => {
 export const handleClickOnPostList = (watchedState) => (e) => {
   const targetElement = e.target;
   const targetElementName = targetElement.getAttribute('name');
-  if (targetElementName === 'previewBtn') {
+  if (targetElementName === 'preview-btn') {
     const { postId } = targetElement.dataset;
     const post = _.find(watchedState.posts, { id: postId });
     const { title, description, link } = post;

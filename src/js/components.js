@@ -3,8 +3,6 @@ import {
   handleMouseLeaveEventOnRssCard,
   handleMouseoverOnDeleteIcon,
   handleMouseoutOnDeleteIcon,
-  handleMouseEnterEventOnCard,
-  handleMouseLeaveEventOnCard,
   handleClosingToast,
 } from './handlers.js';
 
@@ -61,24 +59,6 @@ export const buildRssListContainer = () => {
   return { rssListContainer, rssListOverflowContainer };
 };
 
-export const buildPostListContainer = () => {
-  const postListContainer = document.createElement('div');
-  postListContainer.classList.add(
-    'col-md-6',
-    'col-lg-7',
-    'col-xl-8',
-    'pr-4',
-    'border-left',
-  );
-
-  const postListOverflowContainer = document.createElement('div');
-  postListOverflowContainer.classList.add('overflow-auto');
-  postListOverflowContainer.setAttribute('name', 'overflow-post-list');
-  postListOverflowContainer.style.maxHeight = '850px';
-  postListContainer.appendChild(postListOverflowContainer);
-  return { postListContainer, postListOverflowContainer };
-};
-
 export const buildDeleteIcon = (rssSourceId) => {
   const deleteIcon = document.createElement('img');
   deleteIcon.classList.add('delete-icon', 'ml-2');
@@ -105,7 +85,9 @@ const buildBadge = () => {
   return badge;
 };
 
-export const buildBadgeForShowingNumberOfUnreadPosts = (numberOfUnreadPosts) => {
+export const buildBadgeForShowingNumberOfUnreadPosts = (
+  numberOfUnreadPosts,
+) => {
   const badge = buildBadge();
   badge.textContent = numberOfUnreadPosts;
   badge.style.maxHeight = '22px';
@@ -123,7 +105,6 @@ export const buildNotificationContainerForPostList = (
     'rounded',
     'py-1',
     'bg-secondary',
-    // 'text-center',
     'd-flex',
     'justify-content-center',
     'align-items-center',
@@ -166,81 +147,38 @@ export const buildNotificationContainerForPostList = (
   return container;
 };
 
-const buildBadgeForUnreadPost = (i18n) => {
-  const badge = buildBadge();
-  badge.classList.add('mr-1');
-  badge.textContent = i18n.t('post.new');
-  badge.setAttribute('data-translation-key', 'post.new');
-  return badge;
-};
+export const buildPostCard = (
+  watchedState,
+  title,
+  description,
+  postId,
+  i18n,
+) => {
+  const cardTemplateContent = document.getElementById('post-card-template').content;
+  const cardTemplateClone = cardTemplateContent.cloneNode(true);
+  const card = cardTemplateClone.querySelector('.card');
+  const cardTitle = card.querySelector('[name="card-title"]');
+  const cardBadge = card.querySelector('[name="badge"]');
+  const previewBtn = card.querySelector('[name="preview-btn"]');
+  const cardDescription = card.querySelector('[name="card-description"]');
+  const markAsReadLink = card.querySelector('[name="mark-as-read-link"]');
 
-const buildMarkAsReadLink = (postId, i18n) => {
-  const markAsReadLink = document.createElement('a');
-  markAsReadLink.setAttribute('href', '#');
-  markAsReadLink.textContent = i18n.t('post.markAsRead');
-  markAsReadLink.setAttribute('data-translation-key', 'post.markAsRead');
-  markAsReadLink.setAttribute('data-post-id', postId);
-  markAsReadLink.setAttribute('name', 'mark-as-read-link');
-  markAsReadLink.classList.add('text-muted', 'ml-2');
-  return markAsReadLink;
-};
-
-export const buildPostCard = (watchedState, title, description, postId, i18n) => {
-  const card = document.createElement('div');
-  card.classList.add('card', 'shadow-sm', 'mb-3');
   card.setAttribute('data-post-card-id', postId);
-
-  const cardHeader = document.createElement('div');
-  cardHeader.classList.add(
-    'card-header',
-    'd-flex',
-    'justify-content-between',
-    'align-items-center',
-  );
-
-  const postTitle = document.createElement('h5');
-  postTitle.classList.add('font-weight-normal', 'mb-0');
-  postTitle.setAttribute('name', 'post-title');
-  postTitle.textContent = title;
-  cardHeader.appendChild(postTitle);
-  card.appendChild(cardHeader);
-
-  const cartBody = document.createElement('div');
-  cartBody.classList.add('card-body');
-
-  const postDescription = document.createElement('p');
-  postDescription.classList.add('card-text');
-  postDescription.textContent = `${description.slice(0, 100)} ...`;
-
-  const elementWrapper = document.createElement('div');
-  elementWrapper.classList.add('wrapper');
-
-  const previewBtn = document.createElement('button');
+  cardTitle.textContent = title;
+  cardDescription.textContent = description;
   previewBtn.textContent = i18n.t('post.btn');
-  previewBtn.setAttribute('name', 'previewBtn');
   previewBtn.setAttribute('data-post-id', postId);
-  previewBtn.setAttribute('type', 'button');
-  previewBtn.setAttribute('data-translation-key', 'post.btn');
-  previewBtn.setAttribute('data-toggle', 'modal');
-  previewBtn.setAttribute('data-target', '#preview-modal');
-  previewBtn.classList.add('btn', 'btn-secondary', 'mr-1');
 
-  elementWrapper.appendChild(previewBtn);
-  cartBody.appendChild(postDescription);
-  cartBody.appendChild(elementWrapper);
-  card.appendChild(cartBody);
-
-  card.addEventListener('mouseenter', handleMouseEnterEventOnCard);
-  card.addEventListener('mouseleave', handleMouseLeaveEventOnCard);
-
-  if (!watchedState.readPostIDs.has(postId)) {
-    postTitle.classList.replace('font-weight-normal', 'font-weight-bold');
-    const badgeForUnreadPost = buildBadgeForUnreadPost(i18n);
-    badgeForUnreadPost.classList.add('mr-1');
-    const markAsReadLink = buildMarkAsReadLink(postId, i18n);
-    cardHeader.appendChild(badgeForUnreadPost);
-    elementWrapper.appendChild(markAsReadLink);
+  if (watchedState.readPostIDs.has(postId)) {
+    cardTitle.classList.replace('font-weight-bold', 'font-weight-normal');
+    cardBadge.remove();
+    markAsReadLink.remove();
+    return card;
   }
+
+  cardBadge.textContent = i18n.t('post.new');
+  markAsReadLink.textContent = i18n.t('post.markAsRead');
+  markAsReadLink.setAttribute('data-post-id', postId);
   return card;
 };
 
@@ -251,61 +189,71 @@ export const buildRssSourceCard = (
   description,
   nubmerOfUnreadPosts,
 ) => {
-  const card = document.createElement('div');
-  card.classList.add('card', 'shadow-sm', 'mb-3');
+  const cardTemplateContent = document.getElementById('rss-source-card').content;
+  const cardTemplateClone = cardTemplateContent.cloneNode(true);
+  const card = cardTemplateClone.querySelector('[name="rss-source-card"]');
+  const cardTitle = card.querySelector('[name="card-title"]');
+  const cardDescription = card.querySelector('[name="card-description"]');
+  const cardBadge = card.querySelector('[name="badge"]');
+  const cardDeleteIcon = card.querySelector('[name="delete-icon"]');
+
+  // const card = document.createElement('div');
+  // card.classList.add('card', 'shadow-sm', 'mb-3');
   if (isRssActive) card.classList.add('border-3');
   card.setAttribute('data-source-id', rssSourceId);
-  card.setAttribute('name', 'rss-source-card');
+  cardTitle.textContent = title;
+  cardDescription.textContent = description;
+  // card.setAttribute('name', 'rss-source-card');
 
-  const cardHeader = document.createElement('div');
-  cardHeader.classList.add(
-    'card-header',
-    'p-2',
-    'd-flex',
-    'justify-content-between',
-    'align-items-center',
-  );
+  // const cardHeader = document.createElement('div');
+  // cardHeader.classList.add(
+  //   'card-header',
+  //   'p-2',
+  //   'd-flex',
+  //   'justify-content-between',
+  //   'align-items-center',
+  // );
 
-  const rssTitle = document.createElement('p');
-  rssTitle.classList.add('mb-0', 'font-weight-bold');
-  rssTitle.textContent = title;
+  // const rssTitle = document.createElement('p');
+  // rssTitle.classList.add('mb-0', 'font-weight-bold');
+  // rssTitle.textContent = title;
 
-  const deleteIcon = buildDeleteIcon(rssSourceId);
-  deleteIcon.style.display = 'none';
+  // const deleteIcon = buildDeleteIcon(rssSourceId);
+  // deleteIcon.style.display = 'none';
 
-  const badgeWrapper = document.createElement('div');
-  badgeWrapper.setAttribute('name', 'badge-wrapper');
-  badgeWrapper.style.minWidth = '100px';
-  badgeWrapper.classList.add(
-    'd-flex',
-    'justify-content-center',
-    'align-items-center',
-    'pl-2',
-  );
+  // const badgeWrapper = document.createElement('div');
+  // badgeWrapper.setAttribute('name', 'badge-wrapper');
+  // badgeWrapper.style.minWidth = '100px';
+  // badgeWrapper.classList.add(
+  //   'd-flex',
+  //   'justify-content-center',
+  //   'align-items-center',
+  //   'pl-2',
+  // );
 
-  if (nubmerOfUnreadPosts) {
-    const badgeForShowingNumberOfUnreadPosts = buildBadgeForShowingNumberOfUnreadPosts(
-      nubmerOfUnreadPosts,
-    );
-    badgeWrapper.appendChild(badgeForShowingNumberOfUnreadPosts);
-  }
-  badgeWrapper.appendChild(deleteIcon);
+  // if (nubmerOfUnreadPosts) {
+  //   const badgeForShowingNumberOfUnreadPosts = buildBadgeForShowingNumberOfUnreadPosts(
+  //     nubmerOfUnreadPosts,
+  //   );
+  //   badgeWrapper.appendChild(badgeForShowingNumberOfUnreadPosts);
+  // }
+  // badgeWrapper.appendChild(deleteIcon);
 
-  const cardBody = document.createElement('div');
-  cardBody.classList.add('card-body', 'p-3');
+  // const cardBody = document.createElement('div');
+  // cardBody.classList.add('card-body', 'p-3');
 
-  const rssSourceDescription = document.createElement('p');
-  rssSourceDescription.classList.add('mb-0');
-  rssSourceDescription.textContent = description;
+  // const rssSourceDescription = document.createElement('p');
+  // rssSourceDescription.classList.add('mb-0');
+  // rssSourceDescription.textContent = description;
 
-  cardBody.appendChild(rssSourceDescription);
-  cardHeader.appendChild(rssTitle);
-  cardHeader.appendChild(badgeWrapper);
-  card.appendChild(cardHeader);
-  card.appendChild(cardBody);
+  // cardBody.appendChild(rssSourceDescription);
+  // cardHeader.appendChild(rssTitle);
+  // cardHeader.appendChild(badgeWrapper);
+  // card.appendChild(cardHeader);
+  // card.appendChild(cardBody);
 
-  card.addEventListener('mouseenter', handleMouseEnterEventOnRssCard);
-  card.addEventListener('mouseleave', handleMouseLeaveEventOnRssCard);
+  // card.addEventListener('mouseenter', handleMouseEnterEventOnRssCard);
+  // card.addEventListener('mouseleave', handleMouseLeaveEventOnRssCard);
 
-  return card;
+  // return card;
 };

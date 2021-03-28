@@ -2,7 +2,7 @@ import i18next from 'i18next';
 import resources from './locales/index.js';
 
 import initView from './view.js';
-import { buildPostListContainer, buildRssListContainer } from './components.js';
+import { buildRssListContainer } from './components.js';
 import { setValidationLocale } from './validation.js';
 import {
   handleFormInput,
@@ -19,15 +19,25 @@ const initDOMElements = () => {
   const languageSwitchingBtnsContainer = document.querySelector(
     '[data-toggle="langs"]',
   );
-  const postList = buildPostListContainer();
-  const rssList = buildRssListContainer();
+  const postListContainerTemplate = document.getElementById('post-list-container-template').content;
+  const postListOverflowContainer = postListContainerTemplate.querySelector(
+    '[name="overflow-post-list"]',
+  );
+
+  const rssListContainerTemplate = document.getElementById(
+    'rss-list-container-template',
+  ).content;
+  const rssListOverflowContainer = rssListContainerTemplate.querySelector(
+    '[name="overflow-rss-source-list"]',
+  );
+
   return {
     submit,
     input,
     form,
     languageSwitchingBtnsContainer,
-    postList,
-    rssList,
+    postListOverflowContainer,
+    rssListOverflowContainer,
   };
 };
 
@@ -38,11 +48,9 @@ const runApp = (state, i18n) => {
     input,
     form,
     languageSwitchingBtnsContainer,
-    rssList,
-    postList,
+    postListOverflowContainer,
+    rssListOverflowContainer,
   } = elements;
-  const { rssListOverflowContainer } = rssList;
-  const { postListOverflowContainer } = postList;
 
   languageSwitchingBtnsContainer.addEventListener(
     'click',

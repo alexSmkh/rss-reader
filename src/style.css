@@ -2,6 +2,20 @@
   border-right-width: 5px;
 }
 
+[name="overflow-rss-source"], [name="overflow-post-list"]  {
+  max-height: 850px;
+}
+
+.card {
+  transition: all 0.2s ease-in;
+  box-shadow: 0px 3px 4px rgba(0, 0, 0, 0.40);
+  cursor: pointer;
+}
+
+.card:hover {
+  box-shadow: 0px 10px 16px rgba(0, 0, 0, 0.50);
+}
+
 @media (max-width: 590px) {
   [name='header-title'] {
     font-size: x-large;

@@ -1,74 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png"/>
-    <title>Rss-reader</title>
-  </head>
-  <body>
-  <div class="modal fade" id="preview-modal" tabindex="-1" aria-labelledby="modal" aria-hidden="true" role="dialog" aria-labelledby="preview-modal-label">
-      <div class="modal-dialog modal-dialog-scrollable">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title"></h5>
-            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-              <span aria-hidden="true">&times;</span>
-            </button>
-          </div>
-          <div class="modal-body">
-            <p></p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-dismiss="modal" data-translation-key="modal.closeBtn">Close</button>
-            <a href="#" class="btn btn-primary" data-translation-key="modal.openBtn" target="_blank">Open</a>
-          </div>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="shortcut icon" type="image/png" href="assets/images/favicon.png" />
+  <title>Rss-reader</title>
+</head>
+
+<body>
+  <div class="modal fade" id="preview-modal" tabindex="-1" aria-labelledby="modal" aria-hidden="true" role="dialog"
+    aria-labelledby="preview-modal-label">
+    <div class="modal-dialog modal-dialog-scrollable">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title"></h5>
+          <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+            <span aria-hidden="true">&times;</span>
+          </button>
+        </div>
+        <div class="modal-body">
+          <p></p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-dismiss="modal"
+            data-translation-key="modal.closeBtn">Close</button>
+          <a href="#" class="btn btn-primary" data-translation-key="modal.openBtn" target="_blank">Open</a>
         </div>
       </div>
     </div>
+  </div>
 
-    <main class="flex-grow-1" role="main">
-      <section class="container-fluid bg-dark p-3 shadow">        
-        <div class="col-md-10 col-lg-8 mx-auto text-white">
-          <div class="header-top d-flex justify-content-between align-items-center">
+  <main class="flex-grow-1" role="main">
+    <section class="container-fluid bg-dark p-3 shadow">
+      <div class="col-md-10 col-lg-8 mx-auto text-white">
+        <div class="header-top d-flex justify-content-between align-items-center">
           <h1 class="display-4" name='header-title' data-translation-key="header.title">RSS Reader</h1>
           <div class="btn-group btn-group-toggle" data-toggle="langs">
             <button type="button" class="btn btn-secondary active" data-lang="en" name="change-language">EN</button>
             <button type="button" class="btn btn-secondary" data-lang="ru" name="change-language">RU</button>
-            </div>
-          </div>
-          
-          <p class="lead" name="header-subtitle" data-translation-key="header.subtitle">Start reading RSS today!</p>
-          <hr class="my-4 bg-secondary"></th>
-          <form id="rss-form" class="rss-form mb-3">
-            <div class="form-row">
-              <div class="col">
-                <input id="rss-input" type="text" class="form-control focus-effect" placeholder="RSS Link" name="rss-link" required >
-              </div>
-              <div class="col-auto">
-                <button id="add-content-btn" type="submit" class="btn btn-secondary px-4" data-translation-key="header.form.btn.content" disabled>Add</button>
-              </div>
-            </div>
-          </form>
-          <p class="text-muted" data-translation-key="header.form.hint">Example: https://ru.hexlet.io/lessons.rss or https://testdriven.io/feed.xml</p>
-        </div>
-      </section>
-
-      <section class="container-fluid col-md-10 col-lg-8 mt-4 mb-5">
-        
-        <div class="row" name="rss-content">
-          <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-2 mb-5">
-            <img src="assets/images/feeds.png" >        
-            <p class="h3 mb-2 text-center" data-translation-key="startPageContent.title">Which sources would you like to follow?</p>
           </div>
         </div>
-      </section>
-    </main>
 
-    <footer class="fixed-bottom bg-dark d-flex justify-content-center align-items-center mt-4 py-3">
-        <div class="text-light">
-          <span class="mr-1">created by</span><a href="https://github.com/alexSmkh" target="_blank"><img src="/assets/images/github.svg" style="height: 25px"></a>
+        <p class="lead" name="header-subtitle" data-translation-key="header.subtitle">Start reading RSS today!</p>
+        <hr class="my-4 bg-secondary">
+        </th>
+        <form id="rss-form" class="rss-form mb-3">
+          <div class="form-row">
+            <div class="col">
+              <input id="rss-input" type="text" class="form-control focus-effect" placeholder="RSS Link" name="rss-link"
+                required>
+            </div>
+            <div class="col-auto">
+              <button id="add-content-btn" type="submit" class="btn btn-secondary px-4"
+                data-translation-key="header.form.btn.content" disabled>Add</button>
+            </div>
+          </div>
+        </form>
+        <p class="text-muted" data-translation-key="header.form.hint">Example: https://ru.hexlet.io/lessons.rss or
+          https://testdriven.io/feed.xml</p>
+      </div>
+    </section>
+
+    <section class="container-fluid col-md-10 col-lg-8 mt-4 mb-5">
+      <div class="row" name="rss-content">
+        <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-2 mb-5">
+          <img src="assets/images/feeds.png">
+          <p class="h3 mb-2 text-center" data-translation-key="startPageContent.title">Which sources would you like to
+            follow?</p>
         </div>
-    </footer>
-  </body>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fixed-bottom bg-dark d-flex justify-content-center align-items-center mt-4 py-3">
+    <div class="text-light">
+      <span class="mr-1">created by</span><a href="https://github.com/alexSmkh" target="_blank"><img
+          src="/assets/images/github.svg" style="height: 25px"></a>
+    </div>
+  </footer>
+
+  <!-- Template for the start page  -->
+  <template id="start-page-content-template">
+    <div class="row">
+      <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-2 mb-5">
+        <img src="assets/images/feeds.png">
+        <p class="h3 mb-2 text-center" data-translation-key="startPageContent.title"></p>
+      </div>
+    </div>
+  </template>
+
+  <!-- Template for the RSS source container -->
+  <template id="rss-list-container-template">
+    <div class="col-md-6 col-lg-5 col-xl-4" name="rss-source-list">
+      <div class="overflow-auto p-1" name="overflow-rss-source-list">
+        <div></div>
+      </div>
+    </div>
+  </template>
+
+  <!-- Template for the post list container -->
+  <template id="post-list-container-template">
+    <div class="col-md-6 col-lg-7 col-xl-8 pr-4 border-left" name="post-list-container">
+      <div class="overflow-auto px-3" name="overflow-post-list">
+
+      </div>
+    </div>
+  </template>
+
+  <!-- Template for the rss source card   -->
+  <template id="rss-source-card">
+    <div class="card mb-3 border-3" data-source-id="1" name="rss-source-card">
+      <div class="card-header p-2 d-flex justify-content-between align-items-center">
+        <p class="mb-0 font-weight-bold" name="card-title"></p>
+        <div name="badge-wrapper" class="d-flex justify-content-center align-items-center pl-2"
+          style="min-width: 100px;">
+          <span class="badge badge-danger badge-pill d-flex align-items-center" name="badge"
+            style="max-height: 22px;">109</span><img class="delete-icon ml-2" src="assets/images/x-circle.svg"
+            name="delete-icon" data-del-icon-for-rss-id="1" style="width: 20px; display: none;">
+        </div>
+      </div>
+      <div class="card-body p-3">
+        <p class="mb-0" name="card-description"></p>
+      </div>
+    </div>
+  </template>
+
+  <!-- Template for the post card -->
+  <template id="post-card-template">
+    <div class="card mb-3" data-post-card-id="2">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="font-weight-bold mb-0" name="card-title"></h5><span
+          class="badge badge-danger badge-pill d-flex align-items-center mr-1" name="badge"
+          data-translation-key="post.new" style="max-height: 22px;"></span>
+      </div>
+      <div class="card-body">
+        <p class="card-text" name="card-description"></p>
+        <div class="wrapper"><button name="preview-btn"  type="button" data-translation-key="post.btn"
+            data-toggle="modal" data-target="#preview-modal" class="btn btn-secondary mr-1"></button><a href="#"
+            data-translation-key="post.markAsRead" data-post-id="2" name="mark-as-read-link"
+            class="text-muted ml-2"></a>
+        </div>
+      </div>
+  </template>
+</body>
+
 </html>

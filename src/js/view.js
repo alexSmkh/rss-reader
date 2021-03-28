@@ -11,34 +11,33 @@ import {
 
 const changeLanguage = (language, i18n) => {
   /* eslint-disable  no-param-reassign */
-  i18n.changeLanguage(language)
-    .then((t) => {
-      const btns = document.querySelectorAll('[name="change-language"]');
-      btns.forEach((btn) => btn.classList.toggle('active'));
+  i18n.changeLanguage(language).then((t) => {
+    const btns = document.querySelectorAll('[name="change-language"]');
+    btns.forEach((btn) => btn.classList.toggle('active'));
 
-      const elementsForTranslate = document.querySelectorAll(
-        '[data-translation-key]',
-      );
-      elementsForTranslate.forEach((element) => {
-        const { translationKey } = element.dataset;
-        element.textContent = t(translationKey);
-        /* eslint-enable  no-param-reassign */
-      });
-
-      const rssInput = document.getElementById('rss-input');
-      rssInput.setAttribute('placeholder', t('header.form.placeholder'));
-
-      const elementsForTranslatePlural = document.querySelectorAll(
-        '[data-translation-key-plural]',
-      );
-      elementsForTranslatePlural.forEach((element) => {
-        const translationKey = element.dataset.translationKeyPlural;
-        const count = parseInt(element.dataset.numberForTranslate, 10);
-        /* eslint-disable  no-param-reassign */
-        element.textContent = t(translationKey, { count });
-        /* eslint-enable  no-param-reassign */
-      });
+    const elementsForTranslate = document.querySelectorAll(
+      '[data-translation-key]',
+    );
+    elementsForTranslate.forEach((element) => {
+      const { translationKey } = element.dataset;
+      element.textContent = t(translationKey);
+      /* eslint-enable  no-param-reassign */
     });
+
+    const rssInput = document.getElementById('rss-input');
+    rssInput.setAttribute('placeholder', t('header.form.placeholder'));
+
+    const elementsForTranslatePlural = document.querySelectorAll(
+      '[data-translation-key-plural]',
+    );
+    elementsForTranslatePlural.forEach((element) => {
+      const translationKey = element.dataset.translationKeyPlural;
+      const count = parseInt(element.dataset.numberForTranslate, 10);
+      /* eslint-disable  no-param-reassign */
+      element.textContent = t(translationKey, { count });
+      /* eslint-enable  no-param-reassign */
+    });
+  });
 };
 
 const showBtnSpinner = (btn, i18n) => {
@@ -67,12 +66,8 @@ const getNumberOfUnreadPosts = (watchedState, rssSourceId) => {
 const buildPostList = (watchedState, i18n) => {
   const postList = watchedState.posts
     .filter((post) => watchedState.activeSourceId === post.sourceId)
-    .map((post) => buildPostCard(
-      watchedState,
-      post.title,
-      post.description,
-      post.id,
-      i18n,
+    .map((post) => (
+      buildPostCard(watchedState, post.title, post.description, post.id, i18n)
     ));
   return postList;
 };
@@ -84,7 +79,6 @@ const buildRssList = (watchedState) => {
       watchedState,
       rssSource.id,
     );
-    // console.log('source', rssSource);
     const rssCard = buildRssSourceCard(
       isRssActive,
       rssSource.id,
@@ -92,7 +86,6 @@ const buildRssList = (watchedState) => {
       rssSource.description,
       nubmerOfUnreadPosts,
     );
-    // console.log('rssCard',rssCard)
     return rssCard;
   });
   return rssList;
@@ -123,14 +116,24 @@ const renderStartPage = (i18n) => {
   rssContent.appendChild(container);
 };
 
-const renderRssContent = (watchedState, i18n, elements) => {
+const renderRssContent = (watchedState, i18n) => {
   if (!watchedState.activeSourceId) {
     renderStartPage(i18n);
     return;
   }
+  const postListContainer = document.getElementById(
+    'post-list-container-template',
+  ).content;
+  const postListOverflowContainer = postListContainer.querySelector(
+    '[name="overflow-post-list"]',
+  );
 
-  const { postListContainer, postListOverflowContainer } = elements.postList;
-  const { rssListContainer, rssListOverflowContainer } = elements.rssList;
+  const rssListContainer = document.getElementById(
+    'rss-list-container-template',
+  ).content;
+  const rssListOverflowContainer = rssListContainer.querySelector(
+    '[name="overflow-rss-source-list"]',
+  );
 
   const rssContent = document.querySelector('[name="rss-content"]');
   const rssList = buildRssList(watchedState);
@@ -172,7 +175,9 @@ const renderNotificationBadgeForRssList = (
   const rssSourceCard = rssSourceList.querySelector(
     `[data-source-id="${rssSourceId}"]`,
   );
-  let badgeForShowingNumberOfUnreadPosts = rssSourceCard.querySelector('[name="badge"]');
+  let badgeForShowingNumberOfUnreadPosts = rssSourceCard.querySelector(
+    '[name="badge"]',
+  );
   if (!badgeForShowingNumberOfUnreadPosts) {
     const numberOfUnreadPosts = getNumberOfUnreadPosts(
       watchedState,
@@ -186,7 +191,10 @@ const renderNotificationBadgeForRssList = (
     badgeWrapper.prepend(badgeForShowingNumberOfUnreadPosts);
     return;
   }
-  const unreadPostsNumber = parseInt(badgeForShowingNumberOfUnreadPosts.textContent, 10);
+  const unreadPostsNumber = parseInt(
+    badgeForShowingNumberOfUnreadPosts.textContent,
+    10,
+  );
   badgeForShowingNumberOfUnreadPosts.textContent = unreadPostsNumber + numberOfNewPosts;
 };
 
@@ -315,7 +323,7 @@ const updateRssCardAfterReading = (card) => {
 const updatePostCardAfterReading = (card) => {
   const newLabel = card.querySelector('[name="badge"]');
   const markAsReadLink = card.querySelector('[name="mark-as-read-link"]');
-  const cardTitle = card.querySelector('[name="post-title"]');
+  const cardTitle = card.querySelector('[name="card-title"]');
 
   newLabel.remove();
   markAsReadLink.remove();
@@ -331,7 +339,9 @@ const updateRssAndPostCardsAfterReading = (watchedState, postIds) => {
 
   const post = _.find(watchedState.posts, { id: postId });
   const { sourceId } = post;
-  const rssSourceCard = document.querySelector(`[data-source-id="${sourceId}"]`);
+  const rssSourceCard = document.querySelector(
+    `[data-source-id="${sourceId}"]`,
+  );
   updateRssCardAfterReading(rssSourceCard);
 };
 
