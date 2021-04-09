@@ -18,7 +18,7 @@ export default {
         succeedFeedback: 'Rss был загружен!',
       },
     },
-    notificationForPostList: {
+    notificationContainer: {
       beforeBadge: 'Показать',
       afterBadge: {
         after_0: 'новую запись',
