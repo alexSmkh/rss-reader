@@ -193,6 +193,7 @@ export const handleClosingToast = (event) => {
 };
 
 const handleClickOnMarkAsReadLink = (watchedState, event) => {
+  event.preventDefault();
   const { postId } = event.target.dataset;
   watchedState.readPostIDs.add(postId);
 };
