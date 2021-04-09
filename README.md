@@ -15,5 +15,5 @@ make install
 make develop
 ```
 
-## Sample
+## The sample
 ![Sample](./sample.gif)
