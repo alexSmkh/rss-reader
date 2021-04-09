@@ -1,19 +1,58 @@
-.border-3 {
-  border-right-width: 5px;
-}
-
-[name="overflow-rss-source"], [name="overflow-post-list"]  {
+[name='overflow-rss-source'],
+[name='overflow-post-list'] {
   max-height: 850px;
 }
 
 .card {
-  transition: all 0.2s ease-in;
-  box-shadow: 0px 3px 4px rgba(0, 0, 0, 0.40);
+  transition: box-shadow 0.2s ease-in;
+  box-shadow: 0px 3px 4px rgba(0, 0, 0, 0.4);
   cursor: pointer;
 }
 
+.toast {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+}
+
+.card.active {
+  border-right-width: 5px;
+}
+
 .card:hover {
-  box-shadow: 0px 10px 16px rgba(0, 0, 0, 0.50);
+  box-shadow: 0px 10px 16px rgba(0, 0, 0, 0.5);
+}
+
+[name='delete-icon'] {
+  min-width: 16px;
+  min-height: 16px;
+  background-image: url('assets/images/x-circle.svg');
+  background-repeat: no-repeat;
+  visibility: hidden;
+  opacity: 0;
+  transition: visibility 0.3s, opacity 0.3s linear;
+}
+
+.card:hover [name='delete-icon'] {
+  visibility: visible;
+  opacity: 1;
+  transition: background 0.3s;
+}
+
+#icon-id:hover {
+  background-image: url('assets/images/x-circle-fill.svg');
+}
+
+[name="notification-container"] {
+  position: sticky;
+  top: 0px;
+  z-index: 1000;
+  cursor: pointer;
+}
+
+[name="overflow-rss-source-list"] {
+  max-height: 850px;
 }
 
 @media (max-width: 590px) {

@@ -2,73 +2,52 @@ import i18next from 'i18next';
 import resources from './locales/index.js';
 
 import initView from './view.js';
-import { buildRssListContainer } from './components.js';
 import { setValidationLocale } from './validation.js';
 import {
   handleFormInput,
   handleFormSubmit,
   handleSwitchLanguage,
-  handleClickOnRssList,
-  handleClickOnPostList,
+  handleClickOnRssContent,
 } from './handlers.js';
 
-const initDOMElements = () => {
+const getDOMElements = () => {
   const submit = document.getElementById('add-content-btn');
   const input = document.getElementById('rss-input');
   const form = document.getElementById('rss-form');
-  const languageSwitchingBtnsContainer = document.querySelector(
+  const languageSwitchBtnsContainer = document.querySelector(
     '[data-toggle="langs"]',
   );
-  const postListContainerTemplate = document.getElementById('post-list-container-template').content;
-  const postListOverflowContainer = postListContainerTemplate.querySelector(
-    '[name="overflow-post-list"]',
-  );
-
-  const rssListContainerTemplate = document.getElementById(
-    'rss-list-container-template',
-  ).content;
-  const rssListOverflowContainer = rssListContainerTemplate.querySelector(
-    '[name="overflow-rss-source-list"]',
-  );
+  const rssContent = document.querySelector('[name="rss-content"]');
 
   return {
     submit,
     input,
     form,
-    languageSwitchingBtnsContainer,
-    postListOverflowContainer,
-    rssListOverflowContainer,
+    languageSwitchBtnsContainer,
+    rssContent,
   };
 };
 
 const runApp = (state, i18n) => {
-  const elements = initDOMElements();
+  const elements = getDOMElements();
   const watchedState = initView(state, elements, i18n);
   const {
     input,
     form,
-    languageSwitchingBtnsContainer,
-    postListOverflowContainer,
-    rssListOverflowContainer,
+    languageSwitchBtnsContainer,
+    rssContent,
   } = elements;
 
-  languageSwitchingBtnsContainer.addEventListener(
+  languageSwitchBtnsContainer.addEventListener(
     'click',
     handleSwitchLanguage(watchedState),
   );
-  rssListOverflowContainer.addEventListener(
-    'click',
-    handleClickOnRssList(watchedState),
-  );
-  postListOverflowContainer.addEventListener(
-    'click',
-    handleClickOnPostList(watchedState),
-  );
+  rssContent.addEventListener('click', handleClickOnRssContent(watchedState));
   input.addEventListener('input', handleFormInput(watchedState));
-  form.addEventListener('submit', (e) => handleFormSubmit(watchedState, e));
+  form.addEventListener('submit', handleFormSubmit(watchedState));
 };
 
-export default async () => {
+export default () => {
   setValidationLocale();
 
   const defaultLanguage = 'en';

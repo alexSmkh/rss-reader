@@ -4,9 +4,11 @@ import _ from 'lodash';
 import {
   buildRssSourceCard,
   buildPostCard,
-  buildBadgeForShowingNumberOfUnreadPosts,
   buildToastForShowingErrors,
   buildNotificationContainerForPostList,
+  buildStartPage,
+  buildRssListContainer,
+  buildPostListContainer,
 } from './components.js';
 
 const changeLanguage = (language, i18n) => {
@@ -66,9 +68,7 @@ const getNumberOfUnreadPosts = (watchedState, rssSourceId) => {
 const buildPostList = (watchedState, i18n) => {
   const postList = watchedState.posts
     .filter((post) => watchedState.activeSourceId === post.sourceId)
-    .map((post) => (
-      buildPostCard(watchedState, post.title, post.description, post.id, i18n)
-    ));
+    .map((post) => buildPostCard(watchedState, post.title, post.description, post.id, i18n));
   return postList;
 };
 
@@ -93,27 +93,10 @@ const buildRssList = (watchedState) => {
 
 const renderStartPage = (i18n) => {
   const rssContent = document.querySelector('[name="rss-content"]');
-  const container = document.createElement('div');
-  container.classList.add(
-    'col-12',
-    'd-flex',
-    'flex-column',
-    'justify-content-center',
-    'align-items-center',
-    'mt-5',
-  );
+  const startPageContent = buildStartPage(i18n);
 
-  const img = document.createElement('img');
-  img.setAttribute('src', '/assets/images/feeds.png');
-
-  const p = document.createElement('p');
-  p.classList.add('h3', 'mb-2');
-  p.textContent = i18n.t('startPageContent.title');
-
-  container.appendChild(img);
-  container.appendChild(p);
   rssContent.innerHTML = '';
-  rssContent.appendChild(container);
+  rssContent.appendChild(startPageContent);
 };
 
 const renderRssContent = (watchedState, i18n) => {
@@ -121,16 +104,12 @@ const renderRssContent = (watchedState, i18n) => {
     renderStartPage(i18n);
     return;
   }
-  const postListContainer = document.getElementById(
-    'post-list-container-template',
-  ).content;
+  const postListContainer = buildPostListContainer();
   const postListOverflowContainer = postListContainer.querySelector(
     '[name="overflow-post-list"]',
   );
 
-  const rssListContainer = document.getElementById(
-    'rss-list-container-template',
-  ).content;
+  const rssListContainer = buildRssListContainer();
   const rssListOverflowContainer = rssListContainer.querySelector(
     '[name="overflow-rss-source-list"]',
   );
@@ -157,9 +136,12 @@ const updateNotificationContainerForPostList = (
   const numberOfNewPosts = parseInt(badge.textContent, 10) + numberOfLastUpdates;
   badge.textContent = numberOfNewPosts;
 
-  const afterBadgeContent = badge.nextSibling;
+  const afterBadgeContent = notificationContainer.querySelector(
+    '[name="text-after-badge"]',
+  );
+  afterBadgeContent.textContent = '';
   afterBadgeContent.textContent = i18n.t(
-    'notificationForPostList.afterBadge.after',
+    'notificationContainer.afterBadge.after',
     { count: numberOfNewPosts },
   );
   afterBadgeContent.setAttribute('data-number-for-translate', numberOfNewPosts);
@@ -183,7 +165,7 @@ const renderNotificationBadgeForRssList = (
       watchedState,
       rssSourceId,
     );
-    badgeForShowingNumberOfUnreadPosts = buildBadgeForShowingNumberOfUnreadPosts(
+    badgeForShowingNumberOfUnreadPosts = buildNotificationContainerForPostList(
       i18n,
       numberOfUnreadPosts,
     );
@@ -205,29 +187,31 @@ const renderNotificationContainerForPostList = (
   i18n,
   elements,
 ) => {
-  const {
-    postList: { postListOverflowContainer },
-  } = elements;
-  if (rssSourceId === watchedState.activeSourceId) {
-    let notificationContainer = document.querySelector(
-      '[name="notifications-for-post-list"]',
+  if (rssSourceId !== watchedState.activeSourceId) return;
+
+  const notificationContainer = document.querySelector(
+    '[name="notification-container"]',
+  );
+  if (!notificationContainer) {
+    const container = buildNotificationContainerForPostList(
+      numberOfNewPosts,
+      i18n,
     );
-    if (!notificationContainer) {
-      notificationContainer = buildNotificationContainerForPostList(
-        numberOfNewPosts,
-        i18n,
-      );
-      notificationContainer.addEventListener('click', () => (
-        renderRssContent(watchedState, i18n, elements)
-      ));
-    } else {
-      updateNotificationContainerForPostList(
-        notificationContainer,
-        numberOfNewPosts,
-        i18n,
-      );
-    }
-    postListOverflowContainer.prepend(notificationContainer);
+    container.addEventListener('click', (event) => {
+      event.stopPropagation();
+      renderRssContent(watchedState, i18n, elements);
+    });
+
+    const postListOverflowContainer = document.querySelector(
+      '[name="overflow-post-list"]',
+    );
+    postListOverflowContainer.prepend(container);
+  } else {
+    updateNotificationContainerForPostList(
+      notificationContainer,
+      numberOfNewPosts,
+      i18n,
+    );
   }
 };
 
@@ -330,9 +314,9 @@ const updatePostCardAfterReading = (card) => {
   cardTitle.classList.replace('font-weight-bold', 'font-weight-normal');
 };
 
-const updateRssAndPostCardsAfterReading = (watchedState, postIds) => {
-  const arrFromSet = Array.from(postIds);
-  const postId = arrFromSet[arrFromSet.length - 1];
+const updateRssAndPostCardsAfterReading = (watchedState, setOfPostIds) => {
+  const postIds = Array.from(setOfPostIds);
+  const postId = postIds[postIds.length - 1];
 
   const postCard = document.querySelector(`[data-post-card-id="${postId}"]`);
   updatePostCardAfterReading(postCard);

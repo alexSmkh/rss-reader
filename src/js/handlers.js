@@ -54,9 +54,9 @@ const checkUpdates = (watchedState) => {
     });
 };
 
-export const handleFormInput = (watchedState) => (e) => {
-  e.preventDefault();
-  const rssLink = e.target.value;
+export const handleFormInput = (watchedState) => (event) => {
+  event.preventDefault();
+  const rssLink = event.target.value;
   /* eslint-disable  no-param-reassign */
   watchedState.form.fields.input = rssLink;
   /* eslint-enable  no-param-reassign */
@@ -70,7 +70,7 @@ export const handleFormInput = (watchedState) => (e) => {
   /* eslint-enable  no-param-reassign */
 };
 
-export const handleFormSubmit = (watchedState, event) => {
+export const handleFormSubmit = (watchedState) => (event) => {
   event.preventDefault();
   /* eslint-disable  no-param-reassign */
   watchedState.form.processState = 'sending';
@@ -133,8 +133,8 @@ export const handleFormSubmit = (watchedState, event) => {
     });
 };
 
-export const handleSwitchLanguage = (watchedState) => (e) => {
-  const languageToSwitch = e.target.getAttribute('data-lang');
+export const handleSwitchLanguage = (watchedState) => (event) => {
+  const languageToSwitch = event.target.getAttribute('data-lang');
   if (languageToSwitch === watchedState.language) return;
   /* eslint-disable  no-param-reassign */
   watchedState.language = languageToSwitch;
@@ -174,13 +174,6 @@ const deleteRssSource = (watchedState, rssSourceIdForDelete) => {
   /* eslint-enable  no-param-reassign */
 };
 
-const switchActiveRssSource = (watchedState, idOfCardClicked) => {
-  if (idOfCardClicked === watchedState.activeSourceId) return;
-  /* eslint-disable  no-param-reassign */
-  watchedState.activeSourceId = idOfCardClicked;
-  /* eslint-enable  no-param-reassign */
-};
-
 const updateContentOfModalDialog = (title, description, link) => {
   const modal = document.getElementById('preview-modal');
 
@@ -194,77 +187,48 @@ const updateContentOfModalDialog = (title, description, link) => {
   openBtn.setAttribute('href', link);
 };
 
-export const handleClickOnRssList = (watchedState) => (e) => {
-  const targetElement = e.target;
-  const elementName = targetElement.getAttribute('name');
-  if (elementName === 'delete-icon') {
-    e.stopPropagation();
-    const rssSourceIdForDelete = targetElement.dataset.delIconForRssId;
-    deleteRssSource(watchedState, rssSourceIdForDelete);
-    return;
-  }
-
-  const rssCard = targetElement.closest('[name="rss-source-card"]');
-  const rssSourceId = rssCard.dataset.sourceId;
-  switchActiveRssSource(watchedState, rssSourceId);
-};
-
-export const handleClickOnPostList = (watchedState) => (e) => {
-  const targetElement = e.target;
-  const targetElementName = targetElement.getAttribute('name');
-  if (targetElementName === 'preview-btn') {
-    const { postId } = targetElement.dataset;
-    const post = _.find(watchedState.posts, { id: postId });
-    const { title, description, link } = post;
-    updateContentOfModalDialog(title, description, link);
-
-    watchedState.readPostIDs.add(postId);
-  } else if (targetElementName === 'mark-as-read-link') {
-    const { postId } = targetElement.dataset;
-    watchedState.readPostIDs.add(postId);
-  }
-};
-
-export const handleMouseoverOnDeleteIcon = (e) => {
-  const deleteIcon = e.target;
-  deleteIcon.setAttribute('src', 'assets/images/x-circle-fill.svg');
-};
-
-export const handleMouseoutOnDeleteIcon = (e) => {
-  const deleteIcon = e.target;
-  deleteIcon.setAttribute('src', 'assets/images/x-circle.svg');
-};
-
-export const handleMouseEnterEventOnCard = (e) => {
-  const card = e.target;
-  card.classList.replace('shadow-sm', 'shadow');
-  card.style.transition = 'box-shadow .5s';
-  card.style.cursor = 'pointer';
-  card.style.display = 'block';
-};
-
-export const handleMouseLeaveEventOnCard = (e) => {
-  const card = e.target;
-  card.classList.replace('shadow', 'shadow-sm');
-  card.style.cursor = 'grab';
-  card.style.transition = 'box-shadow .5s';
-};
-
-export const handleMouseEnterEventOnRssCard = (e) => {
-  handleMouseEnterEventOnCard(e);
-  const card = e.target;
-  const deleteIcon = card.querySelector('[name="delete-icon"]');
-  deleteIcon.style.display = 'block';
-};
-
-export const handleMouseLeaveEventOnRssCard = (e) => {
-  handleMouseLeaveEventOnCard(e);
-  const card = e.target;
-  const deleteIcon = card.querySelector('[name="delete-icon"]');
-  deleteIcon.style.display = 'none';
-};
-
-export const handleClosingToast = (e) => {
-  const toast = e.target;
+export const handleClosingToast = (event) => {
+  const toast = event.target;
   toast.remove();
+};
+
+const handleClickOnMarkAsReadLink = (watchedState, event) => {
+  const { postId } = event.target.dataset;
+  watchedState.readPostIDs.add(postId);
+};
+
+const handleClickOnPreviewButton = (watchedState, event) => {
+  const { postId } = event.target.dataset;
+  const post = _.find(watchedState.posts, { id: postId });
+  const { title, description, link } = post;
+  updateContentOfModalDialog(title, description, link);
+  watchedState.readPostIDs.add(postId);
+};
+
+const handleClickOnDeleteIcon = (watchedState, event) => {
+  event.stopPropagation();
+  const rssSourceIdForDelete = event.target.dataset.delIconForRssId;
+  deleteRssSource(watchedState, rssSourceIdForDelete);
+};
+
+const handleClickOnRssCard = (watchedState, card) => {
+  const rssSourceId = card.dataset.sourceId;
+  if (rssSourceId === watchedState.activeSourceId) return;
+  /* eslint-disable  no-param-reassign */
+  watchedState.activeSourceId = rssSourceId;
+  /* eslint-enable  no-param-reassign */
+};
+
+export const handleClickOnRssContent = (watchedState) => (event) => {
+  const elementName = event.target.getAttribute('name');
+  if (elementName === 'delete-icon') {
+    handleClickOnDeleteIcon(watchedState, event);
+  } else if (elementName === 'preview-btn') {
+    handleClickOnPreviewButton(watchedState, event);
+  } else if (elementName === 'mark-as-read-link') {
+    handleClickOnMarkAsReadLink(watchedState, event);
+  } else {
+    const card = event.target.closest('[name="rss-source-card"]');
+    if (card) handleClickOnRssCard(watchedState, card);
+  }
 };

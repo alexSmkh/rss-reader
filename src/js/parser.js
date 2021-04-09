@@ -1,5 +1,3 @@
-import { castArray } from "lodash-es";
-
 class RSSParsingError extends Error {
   constructor(message = 'An error occurred while parsing the RSS') {
     super(message);

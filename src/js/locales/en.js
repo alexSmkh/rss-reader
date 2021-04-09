@@ -18,7 +18,7 @@ export default {
         succeedFeedback: 'Rss has been loaded!',
       },
     },
-    notificationForPostList: {
+    notificationContainer: {
       beforeBadge: 'Show',
       afterBadge: {
         after: 'new post',

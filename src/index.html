@@ -80,17 +80,17 @@
     </div>
   </footer>
 
-  <!-- Template for the start page  -->
-  <template id="start-page-content-template">
+  <!-- Start page  -->
+  <!-- <template id="start-page-content-template">
     <div class="row">
       <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-2 mb-5">
         <img src="assets/images/feeds.png">
         <p class="h3 mb-2 text-center" data-translation-key="startPageContent.title"></p>
       </div>
     </div>
-  </template>
+  </template> -->
 
-  <!-- Template for the RSS source container -->
+  <!-- RSS source container template -->
   <template id="rss-list-container-template">
     <div class="col-md-6 col-lg-5 col-xl-4" name="rss-source-list">
       <div class="overflow-auto p-1" name="overflow-rss-source-list">
@@ -99,7 +99,7 @@
     </div>
   </template>
 
-  <!-- Template for the post list container -->
+  <!-- Post list container template -->
   <template id="post-list-container-template">
     <div class="col-md-6 col-lg-7 col-xl-8 pr-4 border-left" name="post-list-container">
       <div class="overflow-auto px-3" name="overflow-post-list">
@@ -108,16 +108,16 @@
     </div>
   </template>
 
-  <!-- Template for the rss source card   -->
+  <!-- Rss source card template -->
   <template id="rss-source-card">
-    <div class="card mb-3 border-3" data-source-id="1" name="rss-source-card">
+    <div class="card mb-3" data-source-id="1" name="rss-source-card">
       <div class="card-header p-2 d-flex justify-content-between align-items-center">
         <p class="mb-0 font-weight-bold" name="card-title"></p>
         <div name="badge-wrapper" class="d-flex justify-content-center align-items-center pl-2"
           style="min-width: 100px;">
           <span class="badge badge-danger badge-pill d-flex align-items-center" name="badge"
-            style="max-height: 22px;">109</span><img class="delete-icon ml-2" src="assets/images/x-circle.svg"
-            name="delete-icon" data-del-icon-for-rss-id="1" style="width: 20px; display: none;">
+            style="max-height: 22px;">109</span>
+          <div id="icon-id" class="delete-icon ml-2" name="delete-icon"></div>
         </div>
       </div>
       <div class="card-body p-3">
@@ -126,7 +126,7 @@
     </div>
   </template>
 
-  <!-- Template for the post card -->
+  <!-- Post card template-->
   <template id="post-card-template">
     <div class="card mb-3" data-post-card-id="2">
       <div class="card-header d-flex justify-content-between align-items-center">
@@ -136,13 +136,49 @@
       </div>
       <div class="card-body">
         <p class="card-text" name="card-description"></p>
-        <div class="wrapper"><button name="preview-btn"  type="button" data-translation-key="post.btn"
-            data-toggle="modal" data-target="#preview-modal" class="btn btn-secondary mr-1"></button><a href="#"
-            data-translation-key="post.markAsRead" data-post-id="2" name="mark-as-read-link"
-            class="text-muted ml-2"></a>
+        <div class="wrapper">
+          <button name="preview-btn" type="button" data-translation-key="post.btn"
+            data-toggle="modal" data-target="#preview-modal" class="btn btn-secondary mr-1">
+          </button>
+          <a href="#"
+            data-translation-key="post.markAsRead"
+            name="mark-as-read-link"
+            class="text-muted ml-2">
+          </a>
         </div>
       </div>
   </template>
+
+  <!-- Start page template -->
+  <template id="start-page-template">
+    <div class="col-12 d-flex flex-column justify-content-center align-items-center mt-2 mb-5">
+      <img src="assets/images/feeds.png">
+      <p class="h3 mb-2 text-center" data-translation-key="startPageContent.title" name="start-page-title"></p>
+    </div>
+  </template>
+
+  <!-- Notification container template -->
+  <template id="notification-container-template">
+    <div class="mt-0 mb-2 rounded py-1 bg-secondary d-flex justify-content-center align-items-center text-light shadow" name="notification-container">
+      <span data-translation-key-plural="notificationContainer.beforeBadge" name="text-before-badge"></span >
+      <span class="badge badge-danger badge-pill d-flex align-items-center mx-1" name="badge"></span>
+      <span data-translation-key-plural="notificationContainer.afterBadge.after" name="text-after-badge"></span>
+    </div>
+  </template>
+
+  <!-- Toast template -->
+  <template id="toast-template">
+    <div class="toast show" role="alert" aria-live="assertive" aria-atomic="true">
+      <div class="toast-header">
+        <strong class="mr-auto" name="toast-title"></strong>
+        <button class="close" type="button" aria-lebal="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="toast-body"></div>
+    </div>
+  </template>" 
+
 </body>
 
 </html>
