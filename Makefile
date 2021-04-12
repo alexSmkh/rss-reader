@@ -11,9 +11,6 @@ build:
 start-dev:
 	npm start
 
-test:
-	npm test
-
 lint:
 	npx eslint .
 
