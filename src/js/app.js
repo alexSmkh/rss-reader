@@ -52,26 +52,28 @@ export default () => {
 
   const defaultLanguage = 'en';
   const i18nInstance = i18next.createInstance();
-  i18nInstance.init({
-    lng: defaultLanguage,
-    resources,
-  });
-
-  const state = {
-    form: {
-      valid: false,
-      processState: 'filling',
-      fields: {
-        input: '',
-      },
-      error: null,
-    },
-    rssSources: [],
-    activeSourceId: null,
-    posts: [],
-    readPostIDs: new Set(),
-    language: defaultLanguage,
-    isUpdateProcessRunning: false,
-  };
-  runApp(state, i18nInstance);
+  return i18nInstance
+    .init({
+      lng: defaultLanguage,
+      resources,
+    })
+    .then(() => {
+      const state = {
+        form: {
+          valid: false,
+          processState: 'filling',
+          fields: {
+            input: '',
+          },
+          error: null,
+        },
+        rssSources: [],
+        activeSourceId: null,
+        posts: [],
+        readPostIDs: new Set(),
+        language: defaultLanguage,
+        isUpdateProcessRunning: false,
+      };
+      runApp(state, i18nInstance);
+    });
 };
