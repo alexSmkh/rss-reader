@@ -6,12 +6,45 @@ export default {
     },
     header: {
       title: 'RSS Reader',
-      description: 'Start reading RSS today!',
+      subtitle: 'Start reading RSS today!',
       form: {
         placeholder: 'RSS-link',
-        btn: 'Add',
-        hint: 'Example: https://ru.hexlet.io/lessons.rss',
+        hint:
+          'Example: https://ru.hexlet.io/lessons.rss or https://testdriven.io/feed.xml',
+        btn: {
+          content: 'Add',
+          loading: 'Loading...',
+        },
+        succeedFeedback: 'Rss has been loaded!',
       },
+    },
+    notificationContainer: {
+      beforeBadge: 'Show',
+      afterBadge: {
+        after: 'new post',
+        after_plural: 'new posts',
+      },
+    },
+    post: {
+      btn: 'Preview',
+      markAsRead: 'Mark as read',
+      new: 'NEW!',
+    },
+    modal: {
+      closeBtn: 'Close',
+      openBtn: 'Open',
+    },
+    startPageContent: {
+      title: 'Which sources would you like to follow?',
+    },
+    errors: {
+      formValidation: {
+        url: 'Input must be a valid url',
+        itsNotRss: "This source doesn't contain valid rss",
+        required: 'Input is a required field',
+        rssAlreadyExists: 'The entered RSS source is already exist',
+      },
+      isNotSupported: 'This resource is not supported',
     },
   },
 };
